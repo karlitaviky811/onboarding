@@ -1,0 +1,157 @@
+// =============================================================================
+// Responsive Breakpoints
+// =============================================================================
+// Mobile-first breakpoint system aligned with Angular Material's layout grid.
+// Breakpoint values match Material Design 3's adaptive layout guidelines.
+//
+// Usage examples:
+//   @use 'styles/breakpoints' as bp;
+//
+//   // From a breakpoint upward (min-width):
+//   @include bp.respond-to('md') { ... }
+//   @include bp.bp-up('md') { ... }
+//
+//   // Below a breakpoint (max-width):
+//   @include bp.bp-down('md') { ... }
+//
+//   // Between two breakpoints:
+//   @include bp.bp-between('sm', 'lg') { ... }
+//
+// Or after stylePreprocessorOptions + @forward in _index.scss:
+//   @use 'styles' as *;
+//   @include respond-to('md') { ... }
+// =============================================================================
+
+// Breakpoint map — pixel values mark where each range STARTS.
+// 'xs' starts at 0 and has no min-width query (it's the default).
+$breakpoints: (
+  'xs':  0px,
+  'sm':  600px,
+  'md':  960px,
+  'lg':  1280px,
+  'xl':  1920px,
+) !default;
+
+// -----------------------------------------------------------------------------
+// Internal helper — get a breakpoint value by name
+// -----------------------------------------------------------------------------
+@function _bp-value($name) {
+  @if not map-has-key($breakpoints, $name) {
+    @error "Unknown breakpoint: '#{$name}'. Available: #{map-keys($breakpoints)}.";
+  }
+  @return map-get($breakpoints, $name);
+}
+
+// -----------------------------------------------------------------------------
+// respond-to($breakpoint)
+// Alias for bp-up. Mobile-first: applies from the given breakpoint upward.
+//
+// @include respond-to('md') { ... }
+// → @media (min-width: 960px) { ... }
+// -----------------------------------------------------------------------------
+@mixin respond-to($breakpoint) {
+  $value: _bp-value($breakpoint);
+
+  @if $value == 0px {
+    // xs is the default — no media query wrapper needed
+    @content;
+  } @else {
+    @media (min-width: $value) {
+      @content;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// bp-up($breakpoint)
+// Explicit alias — identical to respond-to. Min-width (inclusive).
+//
+// @include bp-up('lg') { ... }
+// → @media (min-width: 1280px) { ... }
+// -----------------------------------------------------------------------------
+@mixin bp-up($breakpoint) {
+  @include respond-to($breakpoint) {
+    @content;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// bp-down($breakpoint)
+// Max-width query — applies BELOW the given breakpoint.
+// Subtracts 0.02px to avoid overlap with the exact breakpoint value.
+//
+// @include bp-down('md') { ... }
+// → @media (max-width: 959.98px) { ... }
+// -----------------------------------------------------------------------------
+@mixin bp-down($breakpoint) {
+  $value: _bp-value($breakpoint);
+
+  @if $value == 0px {
+    @warn "bp-down('xs') always matches — no media query wrapper applied.";
+    @content;
+  } @else {
+    @media (max-width: calc(#{$value} - 0.02px)) {
+      @content;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// bp-between($lower, $upper)
+// Applies styles between two breakpoints (lower inclusive, upper exclusive).
+//
+// @include bp-between('sm', 'lg') { ... }
+// → @media (min-width: 600px) and (max-width: 1279.98px) { ... }
+// -----------------------------------------------------------------------------
+@mixin bp-between($lower, $upper) {
+  $min: _bp-value($lower);
+  $max: _bp-value($upper);
+
+  @if $min >= $max {
+    @error "bp-between: '#{$lower}' must be smaller than '#{$upper}'.";
+  }
+
+  @media (min-width: $min) and (max-width: calc(#{$max} - 0.02px)) {
+    @content;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// bp-only($breakpoint)
+// Applies styles only within the named breakpoint range.
+// The upper bound is the next breakpoint minus 0.02px.
+//
+// @include bp-only('md') { ... }
+// → @media (min-width: 960px) and (max-width: 1279.98px) { ... }
+// -----------------------------------------------------------------------------
+@mixin bp-only($breakpoint) {
+  $keys: map-keys($breakpoints);
+  $index: index($keys, $breakpoint);
+
+  @if $index == null {
+    @error "Unknown breakpoint: '#{$breakpoint}'.";
+  }
+
+  $min: _bp-value($breakpoint);
+  $is-last: $index == length($keys);
+
+  @if $is-last {
+    // Last breakpoint — no upper bound
+    @include bp-up($breakpoint) {
+      @content;
+    }
+  } @else {
+    $next-key: nth($keys, $index + 1);
+    $max: _bp-value($next-key);
+
+    @if $min == 0px {
+      @media (max-width: calc(#{$max} - 0.02px)) {
+        @content;
+      }
+    } @else {
+      @media (min-width: $min) and (max-width: calc(#{$max} - 0.02px)) {
+        @content;
+      }
+    }
+  }
+}

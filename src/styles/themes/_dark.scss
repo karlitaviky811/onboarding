@@ -1,0 +1,98 @@
+// =============================================================================
+// Dark Theme
+// =============================================================================
+// Angular Material M3 dark mode is activated by setting color-scheme: dark
+// on the root element. Material's generated CSS custom properties automatically
+// swap to dark variants when color-scheme is dark.
+//
+// This file provides TWO activation strategies:
+//   1. @media (prefers-color-scheme: dark) — respects OS/browser preference
+//   2. body.dark-theme — manual toggle for a user-controlled theme switcher
+//
+// Implementation note:
+//   Material M3 (via mat.theme()) generates BOTH light and dark token sets
+//   scoped to color-scheme. Simply toggling color-scheme on :root is enough
+//   to flip Material's palette. We then layer app-specific semantic aliases
+//   on top, matching what _light.scss defines so components don't need to
+//   know which theme is active.
+// =============================================================================
+
+@use '@angular/material' as mat;
+
+// Mixin that contains all dark-specific overrides so we can apply it in
+// both the media query context and the class-based context without duplication.
+@mixin dark-theme-vars {
+  color-scheme: dark;
+
+  // -----------------------------------------------------------------------
+  // App-level semantic color aliases — dark variants
+  // These mirror the aliases in _light.scss so component stylesheets
+  // always reference the same token names regardless of active theme.
+  // Material's --mat-sys-* tokens already swap values in dark mode;
+  // we just re-assign our semantic aliases to match.
+  // -----------------------------------------------------------------------
+  --color-brand:          var(--mat-sys-primary);
+  --color-brand-subtle:   var(--mat-sys-primary-container);
+  --color-on-brand:       var(--mat-sys-on-primary);
+
+  --color-accent:         var(--mat-sys-tertiary);
+  --color-accent-subtle:  var(--mat-sys-tertiary-container);
+  --color-on-accent:      var(--mat-sys-on-tertiary);
+
+  --color-danger:         var(--mat-sys-error);
+  --color-danger-subtle:  var(--mat-sys-error-container);
+  --color-on-danger:      var(--mat-sys-on-error);
+
+  --color-surface:        var(--mat-sys-surface);
+  --color-surface-raised: var(--mat-sys-surface-container-high);
+  --color-on-surface:     var(--mat-sys-on-surface);
+
+  --color-border:         var(--mat-sys-outline-variant);
+  --color-border-strong:  var(--mat-sys-outline);
+
+  --color-text:           var(--mat-sys-on-surface);
+  --color-text-muted:     var(--mat-sys-on-surface-variant);
+
+  // -----------------------------------------------------------------------
+  // Dark-specific surface tokens
+  // Material dark surfaces tend to be dark but not pure black (M3 uses
+  // tonal surfaces). Override the app surface aliases here.
+  // -----------------------------------------------------------------------
+  --app-page-bg:          var(--mat-sys-surface);
+  --app-card-bg:          var(--mat-sys-surface-container);
+  --app-sidebar-bg:       var(--mat-sys-surface-container-low);
+  --app-header-bg:        var(--mat-sys-surface-container);
+
+  // -----------------------------------------------------------------------
+  // State layer opacities in dark mode (slightly higher contrast)
+  // -----------------------------------------------------------------------
+  --state-hover-opacity:    0.08;
+  --state-focus-opacity:    0.12;
+  --state-pressed-opacity:  0.12;
+  --state-dragged-opacity:  0.16;
+}
+
+// -----------------------------------------------------------------------------
+// Strategy 1: OS/browser preference (recommended default)
+// -----------------------------------------------------------------------------
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    @include dark-theme-vars;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Strategy 2: Explicit class-based toggle
+// Apply class="dark-theme" to <body> or <html> via a ThemeService.
+// This overrides the OS preference when set explicitly.
+// -----------------------------------------------------------------------------
+.dark-theme,
+[data-theme="dark"] {
+  @include dark-theme-vars;
+
+  // Propagate color-scheme to Angular Material overlay containers which
+  // are appended to <body> by the CDK OverlayContainer service.
+  .cdk-overlay-container {
+    color-scheme: dark;
+  }
+}

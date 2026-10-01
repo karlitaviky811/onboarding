@@ -1,0 +1,33 @@
+// =============================================================================
+// Styles Barrel — Public API
+// =============================================================================
+// This file is the single entry point for component-level stylesheets.
+//
+// After configuring stylePreprocessorOptions in angular.json:
+//   "stylePreprocessorOptions": { "includePaths": ["src"] }
+//
+// Components can import the full system in one line:
+//   @use 'styles' as *;
+//
+// Or import specific partials without relative paths:
+//   @use 'styles/mixins' as mx;
+//   @use 'styles/breakpoints' as bp;
+//
+// IMPORTANT: This file @forwards ONLY SCSS APIs (mixins, functions, variables).
+// It does NOT forward files that emit CSS (tokens, reset, typography,
+// animations, themes). Those are included ONCE in the global styles.scss.
+// Forwarding CSS-emitting files would cause those styles to be duplicated
+// in every component's encapsulated stylesheet.
+// =============================================================================
+
+// Mixins — layout helpers, elevation, transitions, focus ring, surface
+@forward 'styles/mixins';
+
+// Breakpoints — respond-to, bp-up, bp-down, bp-between, bp-only
+@forward 'styles/breakpoints';
+
+// Token variables are on :root as CSS custom properties, so components access
+// them via var(--spacing-md) etc. without any @forward needed.
+// If you add SCSS variables or functions to _tokens.scss in the future,
+// forward them here:
+// @forward 'styles/tokens';

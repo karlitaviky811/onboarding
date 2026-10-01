@@ -1,1 +1,53 @@
-/* You can add global styles to this file, and also import other style files */
+
+@use '@angular/material' as mat;
+@use './styles/tokens' as *;
+@use './styles/reset' as *;
+@use './styles/typography' as *;
+@use './styles/animations' as *;
+@use './styles/themes/light' as *;
+@use './styles/themes/dark' as *;
+
+// El tema Material lo gobierna crdx-components (global-material-theme.scss),
+// cargado vía styles[] en angular.json. No declaramos mat.theme() aquí para
+// evitar un tema duplicado que compita con el de la librería.
+html {
+  height: 100%;
+}
+
+body {
+  color-scheme: light;
+
+  margin: 0;
+  height: 100%;
+  min-height: 100vh;
+
+  // Leverage Material M3 system tokens for baseline appearance.
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+
+  // Smooth font rendering on macOS/high-DPI screens.
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// =============================================================================
+// Global layout helpers
+// =============================================================================
+
+// A reusable page wrapper that constrains content width and applies
+// consistent horizontal padding. Use <div class="page-container"> in templates.
+.page-container {
+  width: 100%;
+  max-width: var(--layout-max-width);
+  margin-inline: auto;
+  padding-inline: var(--layout-page-padding-x);
+}
+
+// Content-width constraint (narrower than max-width, for text-heavy pages).
+.content-container {
+  width: 100%;
+  max-width: var(--layout-content-width);
+  margin-inline: auto;
+  padding-inline: var(--layout-page-padding-x);
+}

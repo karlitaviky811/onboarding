@@ -1,0 +1,195 @@
+// =============================================================================
+// Animation Tokens & Keyframes
+// =============================================================================
+// Motion tokens are declared on :root and map to Material M3's motion
+// principles where applicable. Keyframes use these tokens so a single
+// token change propagates to all animations.
+//
+// The --duration-* and --easing-* tokens are declared in _tokens.scss.
+// Reference them here via var() to keep animations in sync with the
+// rest of the design system.
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// Keyframes
+// -----------------------------------------------------------------------------
+
+/// Simple opacity fade-in. Combine with transform for richer entrances.
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/// Fade out — inverse of fadeIn.
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/// Slides content in from below with a simultaneous fade.
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/// Slides content out downward with a simultaneous fade.
+@keyframes slideOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+/// Slides content in from the right edge.
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/// Slides content in from the left edge.
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/// Subtle pulsing scale — useful for loading states and attention cues.
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.04);
+  }
+}
+
+/// Continuous rotation — use for loading spinners.
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/// Skeleton loader shimmer — combines with a gradient background.
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Utility classes
+// Apply directly to elements for declarative animations.
+// All classes respect prefers-reduced-motion (see _reset.scss for the
+// global rule; individual classes also set animation: none as a safe
+// override if the reset partial is not loaded).
+// -----------------------------------------------------------------------------
+
+.animate-fade-in {
+  animation: fadeIn var(--duration-normal, 200ms) var(--easing-standard-decel, ease-out) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.animate-fade-out {
+  animation: fadeOut var(--duration-normal, 200ms) var(--easing-standard-accel, ease-in) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.animate-slide-up {
+  animation: slideInUp var(--duration-slow, 300ms) var(--easing-emphasized-decel, cubic-bezier(0.05, 0.7, 0.1, 1)) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.animate-slide-right {
+  animation: slideInRight var(--duration-slow, 300ms) var(--easing-emphasized-decel, cubic-bezier(0.05, 0.7, 0.1, 1)) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.animate-slide-left {
+  animation: slideInLeft var(--duration-slow, 300ms) var(--easing-emphasized-decel, cubic-bezier(0.05, 0.7, 0.1, 1)) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.animate-pulse {
+  animation: pulse var(--duration-slowest, 500ms) var(--easing-standard, cubic-bezier(0.2, 0, 0, 1)) infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.animate-spin {
+  animation: spin 1000ms var(--easing-linear, linear) infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Stagger helpers
+// Add .stagger-children to a parent. Direct children receive incremental
+// animation-delay values for a cascading entrance effect.
+// -----------------------------------------------------------------------------
+.stagger-children {
+  $stagger-delay: 60ms;
+  $max-children: 10;
+
+  @for $i from 1 through $max-children {
+    > :nth-child(#{$i}) {
+      animation-delay: calc(#{$i - 1} * #{$stagger-delay});
+    }
+  }
+}

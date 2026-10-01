@@ -1,0 +1,77 @@
+// =============================================================================
+// Light Theme Overrides
+// =============================================================================
+// The base Material M3 theme (azure palette + blue tertiary) is declared in
+// styles.scss via mat.theme(). This file adds app-specific semantic color
+// role overrides using CSS custom property reassignment.
+//
+// Strategy: override only what the base theme doesn't get right for the app.
+// Do NOT change primary/secondary/tertiary palette hues here — do that in
+// the mat.theme() call in styles.scss if a palette swap is needed.
+//
+// M3 system color tokens available for override:
+//   --mat-sys-primary, --mat-sys-on-primary
+//   --mat-sys-primary-container, --mat-sys-on-primary-container
+//   --mat-sys-secondary, --mat-sys-on-secondary
+//   --mat-sys-secondary-container, --mat-sys-on-secondary-container
+//   --mat-sys-tertiary, --mat-sys-on-tertiary
+//   --mat-sys-tertiary-container, --mat-sys-on-tertiary-container
+//   --mat-sys-error, --mat-sys-on-error
+//   --mat-sys-surface, --mat-sys-on-surface
+//   --mat-sys-surface-variant, --mat-sys-on-surface-variant
+//   --mat-sys-surface-container, --mat-sys-surface-container-low, etc.
+//   --mat-sys-outline, --mat-sys-outline-variant
+//   --mat-sys-background, --mat-sys-on-background
+// =============================================================================
+
+// Light theme is the default color-scheme. These overrides apply globally
+// when color-scheme is light (set on <html> by mat.theme()).
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  // -----------------------------------------------------------------------
+  // App-level semantic color aliases
+  // These map M3 system roles to app-specific concepts, making component
+  // styles read declaratively: var(--color-brand) vs var(--mat-sys-primary).
+  // -----------------------------------------------------------------------
+  --color-brand:          var(--mat-sys-primary);
+  --color-brand-subtle:   var(--mat-sys-primary-container);
+  --color-on-brand:       var(--mat-sys-on-primary);
+
+  --color-accent:         var(--mat-sys-tertiary);
+  --color-accent-subtle:  var(--mat-sys-tertiary-container);
+  --color-on-accent:      var(--mat-sys-on-tertiary);
+
+  --color-danger:         var(--mat-sys-error);
+  --color-danger-subtle:  var(--mat-sys-error-container);
+  --color-on-danger:      var(--mat-sys-on-error);
+
+  --color-surface:        var(--mat-sys-surface);
+  --color-surface-raised: var(--mat-sys-surface-container-high);
+  --color-on-surface:     var(--mat-sys-on-surface);
+
+  --color-border:         var(--mat-sys-outline-variant);
+  --color-border-strong:  var(--mat-sys-outline);
+
+  --color-text:           var(--mat-sys-on-surface);
+  --color-text-muted:     var(--mat-sys-on-surface-variant);
+
+  // -----------------------------------------------------------------------
+  // Light-specific surface adjustments
+  // Material M3 light surfaces are already well-defined; these fine-tune
+  // the app's card and page backgrounds.
+  // -----------------------------------------------------------------------
+  --app-page-bg:          var(--mat-sys-surface);
+  --app-card-bg:          var(--mat-sys-surface-container);
+  --app-sidebar-bg:       var(--mat-sys-surface-container-low);
+  --app-header-bg:        var(--mat-sys-surface-container);
+
+  // -----------------------------------------------------------------------
+  // State layer opacities (M3 specifies these per interaction)
+  // -----------------------------------------------------------------------
+  --state-hover-opacity:    0.08;
+  --state-focus-opacity:    0.12;
+  --state-pressed-opacity:  0.12;
+  --state-dragged-opacity:  0.16;
+}

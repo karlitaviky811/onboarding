@@ -1,0 +1,128 @@
+// =============================================================================
+// Minimal Reset — Angular Material Compatible
+// =============================================================================
+// This is an intentionally MINIMAL reset. Angular Material applies many
+// normalizations internally (via @angular/cdk/overlay, material/core, etc.).
+// We only reset what Material does NOT handle, to avoid conflicts.
+//
+// DO NOT reset:
+//   - font-family, font-size, line-height (Material handles via mat.theme())
+//   - outline (Material provides :focus-visible styles per component)
+//   - table, form element specifics (Material components own these)
+//   - color/background on input/button (Material theming covers these)
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// Box model — apply universally before Material component styles load
+// -----------------------------------------------------------------------------
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+// -----------------------------------------------------------------------------
+// Lists — remove default bullets/numbers only when semantically non-list
+// (role="list" is commonly set by Angular CDK and component lists)
+// -----------------------------------------------------------------------------
+ul[role="list"],
+ol[role="list"] {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+// -----------------------------------------------------------------------------
+// Buttons — strip default browser styles for custom button implementations.
+// Material button components already handle this internally; this applies to
+// any native <button> used outside Material.
+// -----------------------------------------------------------------------------
+button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+// -----------------------------------------------------------------------------
+// Media — ensure images and video don't overflow their containers
+// -----------------------------------------------------------------------------
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+  display: block;
+}
+
+// -----------------------------------------------------------------------------
+// Links — remove default underline; components/themes should opt back in
+// -----------------------------------------------------------------------------
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+// -----------------------------------------------------------------------------
+// Typography normalization for non-Material elements
+// Headings (h1–h6) retain their semantic size unless consumed by Material
+// typography. Remove browser margin to avoid layout inconsistencies.
+// -----------------------------------------------------------------------------
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font: inherit; // Prevents browser UA overrides; compose with M3 type roles
+}
+
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+// -----------------------------------------------------------------------------
+// Prefers-reduced-motion — disable animations/transitions for users who
+// have enabled this OS-level accessibility preference.
+// Individual component overrides should also respect this.
+// -----------------------------------------------------------------------------
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Scrollbar — thin, themed scrollbar for Chromium-based browsers.
+// Uses Material M3 color tokens for consistency.
+// -----------------------------------------------------------------------------
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--mat-sys-surface-container-low, transparent);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--mat-sys-outline-variant, #ccc);
+  border-radius: 4px;
+
+  &:hover {
+    background: var(--mat-sys-outline, #999);
+  }
+}
+
+// Firefox thin scrollbar
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--mat-sys-outline-variant, #ccc) var(--mat-sys-surface-container-low, transparent);
+}

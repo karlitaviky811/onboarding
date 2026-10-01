@@ -1,0 +1,209 @@
+// =============================================================================
+// Reusable Layout Mixins
+// =============================================================================
+// Usage (after stylePreprocessorOptions is configured in angular.json):
+//   @use 'styles/mixins' as mx;
+//   .container { @include mx.flex-center; }
+//
+// Or via the barrel (src/styles/_index.scss with @forward):
+//   @use 'styles' as *;
+//   .container { @include flex-center; }
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// Flexbox layout helpers
+// -----------------------------------------------------------------------------
+
+/// Centers children on both axes using flexbox.
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/// Spaces children apart horizontally, centers on the cross axis.
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/// Aligns children to the start (left) of the main axis, centers vertically.
+@mixin flex-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/// Aligns children to the end (right) of the main axis, centers vertically.
+@mixin flex-end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/// Stacks children vertically.
+/// @param {String} $align [stretch] - align-items value
+/// @param {String} $justify [flex-start] - justify-content value
+@mixin flex-column($align: stretch, $justify: flex-start) {
+  display: flex;
+  flex-direction: column;
+  align-items: $align;
+  justify-content: $justify;
+}
+
+/// Prevents a flex child from shrinking below its content size.
+@mixin flex-no-shrink {
+  flex-shrink: 0;
+}
+
+// -----------------------------------------------------------------------------
+// CSS Grid helpers
+// -----------------------------------------------------------------------------
+
+/// Generates a CSS grid with a uniform column count and gap.
+/// @param {Number|String} $cols - Number of columns or a repeat() value
+/// @param {Length} $gap [var(--spacing-md)] - Gap between cells
+///
+/// @example
+///   .card-grid { @include grid(3, var(--spacing-lg)); }
+///   .auto-grid { @include grid(auto-fill, var(--spacing-sm)); }
+@mixin grid($cols, $gap: var(--spacing-md)) {
+  display: grid;
+  gap: $gap;
+
+  @if type-of($cols) == number and unitless($cols) {
+    grid-template-columns: repeat(#{$cols}, 1fr);
+  } @else {
+    // Accept pre-built values like 'auto-fill' paired with minmax()
+    grid-template-columns: $cols;
+  }
+}
+
+/// Auto-responsive grid — fills available space with min-width columns.
+/// @param {Length} $min-col-width [200px] - Minimum column width
+/// @param {Length} $gap [var(--spacing-md)] - Gap between cells
+@mixin grid-auto($min-col-width: 200px, $gap: var(--spacing-md)) {
+  display: grid;
+  gap: $gap;
+  grid-template-columns: repeat(auto-fill, minmax(#{$min-col-width}, 1fr));
+}
+
+// -----------------------------------------------------------------------------
+// Accessibility helpers
+// -----------------------------------------------------------------------------
+
+/// Hides an element visually but keeps it in the accessibility tree.
+/// Preferred over display:none or visibility:hidden for assistive technology.
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/// Reverses visually-hidden — use to show on focus (e.g., skip links).
+@mixin visually-hidden-focusable {
+  &:not(:focus):not(:focus-within) {
+    @include visually-hidden;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Text truncation
+// -----------------------------------------------------------------------------
+
+/// Truncates text with an ellipsis.
+/// @param {Number} $lines [1] - Number of visible lines before truncation.
+///   1 → single-line (white-space: nowrap)
+///   2+ → multi-line via -webkit-line-clamp
+@mixin truncate($lines: 1) {
+  @if $lines == 1 {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  } @else {
+    display: -webkit-box;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Material M3 Elevation
+// -----------------------------------------------------------------------------
+
+/// Applies a Material M3-style elevation using box-shadow.
+/// The shadow tokens in _tokens.scss mirror Material's shadow levels.
+/// @param {Number} $level [1] - Elevation level (0–5)
+///
+/// @example
+///   .card { @include elevation(2); }
+@mixin elevation($level: 1) {
+  @if $level == 0 {
+    box-shadow: var(--shadow-level-0);
+  } @else if $level == 1 {
+    box-shadow: var(--shadow-level-1);
+  } @else if $level == 2 {
+    box-shadow: var(--shadow-level-2);
+  } @else if $level == 3 {
+    box-shadow: var(--shadow-level-3);
+  } @else if $level == 4 {
+    box-shadow: var(--shadow-level-4);
+  } @else if $level == 5 {
+    box-shadow: var(--shadow-level-5);
+  } @else {
+    @warn "elevation(): level #{$level} is out of range (0–5). Using level 5.";
+    box-shadow: var(--shadow-level-5);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Surface / container helpers using M3 tokens
+// -----------------------------------------------------------------------------
+
+/// Applies a Material M3 surface container background with matching text color.
+/// @param {String} $variant [''] - '', 'low', 'high', 'highest', 'lowest'
+@mixin surface($variant: '') {
+  @if $variant == '' {
+    background-color: var(--mat-sys-surface-container);
+    color: var(--mat-sys-on-surface);
+  } @else {
+    background-color: var(--mat-sys-surface-container-#{$variant});
+    color: var(--mat-sys-on-surface);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Transition shorthand
+// -----------------------------------------------------------------------------
+
+/// Generates a consistent transition declaration.
+/// @param {String|List} $properties [all] - Properties to transition
+/// @param {Time} $duration [var(--duration-normal)] - Duration
+/// @param {String} $easing [var(--easing-standard)] - Easing function
+@mixin transition($properties: all, $duration: 200ms, $easing: var(--easing-standard)) {
+  $transitions: ();
+
+  @each $prop in $properties {
+    $transitions: append($transitions, #{$prop} #{$duration} #{$easing}, comma);
+  }
+
+  transition: $transitions;
+}
+
+// -----------------------------------------------------------------------------
+// Focus ring — consistent with Material M3 focus indicator
+// -----------------------------------------------------------------------------
+
+/// Applies a visible focus outline aligned with Material M3 focus states.
+@mixin focus-ring($color: var(--mat-sys-primary), $offset: 2px) {
+  outline: 2px solid $color;
+  outline-offset: $offset;
+}

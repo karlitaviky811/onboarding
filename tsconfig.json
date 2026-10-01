@@ -3,6 +3,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
@@ -12,7 +13,18 @@
     "experimentalDecorators": true,
     "importHelpers": true,
     "target": "ES2022",
-    "module": "preserve"
+    "module": "preserve",
+
+    "paths": {
+      "crdx-components": ["./node_modules/crdx-components/src/index.ts"],
+      "@credit-application/domain": ["./src/app/features/credit-application/domain/index.ts"],
+      "@credit-application/application": ["./src/app/features/credit-application/application/index.ts"],
+      "@credit-application/infrastructure": ["./src/app/features/credit-application/infrastructure/index.ts"],
+      "@shared/*": ["./src/app/shared/*"],
+      "@core/*": ["./src/app/core/*"],
+      "@testing": ["./src/testing/index.ts"],
+      "@environments/*": ["./src/environments/*"]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

@@ -1,0 +1,35 @@
+
+> onboarding-app@0.0.0 build
+> ng build
+
+> Building...
+√ Building...
+Initial chunk files | Names                     |  Raw size | Estimated transfer size
+chunk-ClgaUWw-.js   | -                         | 164.96 kB |                48.65 kB
+main-TVLUW7KT.js    | main                      | 123.54 kB |                31.26 kB
+styles-LBSTA3CA.css | styles                    | 115.21 kB |                10.54 kB
+
+                    | Initial total             | 403.71 kB |                90.45 kB
+
+Lazy chunk files    | Names                     |  Raw size | Estimated transfer size
+chunk-DTDpwKTM.js   | datos-basicos             | 695.34 kB |               120.44 kB
+chunk-BIQWvCEJ.js   | browser                   |  64.39 kB |                17.27 kB
+chunk-BRk0ESlF.js   | -                         |   3.96 kB |                 1.02 kB
+chunk-CuGJNNTq.js   | -                         |   2.91 kB |                 1.04 kB
+chunk-1xiAJkgH.js   | onboarding-routes         | 903 bytes |               903 bytes
+chunk-uIXNwyNP.js   | resultado                 | 637 bytes |               637 bytes
+chunk-EwAXGpfX.js   | validacion-identidad      | 615 bytes |               615 bytes
+chunk-DdSf9bsW.js   | consentimiento            | 614 bytes |               614 bytes
+chunk-BSJnax2c.js   | credit-application-routes | 489 bytes |               489 bytes
+
+Application bundle generation complete. [7.505 seconds] - 2026-09-18T21:12:16.064Z
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: MatNoDataRow is not used within the template of SharedTableComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    node_modules/crdx-components/src/lib/components/shared-table/shared-table.component.ts:38:158:
+[37m      38 │ ...owDef, MatRow, MatRowDef, [32mMatNoDataRow[37m, MatPaginator, MatProgre...
+         ╵                              [32m~~~~~~~~~~~~[0m
+
+
+Output location: C:\Users\ktovar\Documents\onboarding-app\dist\onboarding-app
+

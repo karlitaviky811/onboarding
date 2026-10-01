@@ -4,27 +4,47 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "serve:public": "ng serve --port 4200 --host 0.0.0.0",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "analyze": "ng build --configuration development --source-map=true && source-map-explorer \"dist/onboarding-app/browser/*.js\"",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "test:ui": "vitest --ui"
   },
   "private": true,
   "packageManager": "npm@10.9.8",
   "dependencies": {
+    "@angular/animations": "^22.1.6",
+    "@angular/cdk": "^22.1.7",
     "@angular/common": "^22.1.0",
     "@angular/compiler": "^22.1.0",
     "@angular/core": "^22.1.0",
     "@angular/forms": "^22.1.0",
+    "@angular/material": "^22.1.7",
     "@angular/platform-browser": "^22.1.0",
     "@angular/router": "^22.1.0",
+    "ngx-mask": "^22.1.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
+    "@analogjs/vite-plugin-angular": "^2.7.2",
+    "@analogjs/vitest-angular": "^2.7.2",
     "@angular/build": "^22.1.8",
     "@angular/cli": "^22.1.8",
     "@angular/compiler-cli": "^22.1.0",
+    "@testing-library/angular": "^19.5.0",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/user-event": "^14.6.7",
+    "@vitest/coverage-v8": "^4.1.11",
+    "crdx-components": "^3.0.7",
+    "happy-dom": "^20.14.5",
     "prettier": "^3.8.1",
-    "typescript": "~6.0.2"
+    "source-map-explorer": "^2.5.3",
+    "typescript": "~6.0.2",
+    "vitest": "^4.1.11"
   }
 }
