@@ -39,6 +39,7 @@
       @default {
         <!-- idle / creating: show the widget component -->
         <app-metamap-widget
+          [autoLaunch]="true"
           [clientId]="widgetClientId()"
           [flowId]="widgetFlowId()"
           [identityId]="widgetIdentityId()"

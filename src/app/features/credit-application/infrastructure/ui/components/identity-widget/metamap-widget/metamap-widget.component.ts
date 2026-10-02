@@ -54,11 +54,18 @@ export class MetamapWidgetComponent implements IdentityVerificationWidget, After
 
   // ── Signal inputs ──────────────────────────────────────────────────────────
 
-  readonly clientId = input.required<string>();
-  readonly flowId = input.required<string>();
+  // Optional: identity-validation sets these via template bindings. In the
+  // provider-agnostic Consent path (dynamic createComponent) they stay unset,
+  // so open() falls back to environment config — consistent with Persona/Onfido
+  // which self-configure from the environment internally.
+  readonly clientId = input<string>('');
+  readonly flowId = input<string>('');
   readonly identityId = input<string | undefined>(undefined);
   readonly validated = input(0);
-  readonly autoLaunch = input(true);
+  // Default OFF: widgets created via the IdentityVerificationWidget interface
+  // (Consent's dynamic createComponent) must launch only on open(), never on init.
+  // identity-validation opts in with [autoLaunch]="true" for its auto-open flow.
+  readonly autoLaunch = input(false);
 
   // ── Signal outputs ─────────────────────────────────────────────────────────
 
@@ -216,9 +223,11 @@ export class MetamapWidgetComponent implements IdentityVerificationWidget, After
     const win = window as unknown as MetamapWindow;
     const Verification = win.MetamapVerification!;
 
+    // Inputs win (identity-validation template path); fall back to environment
+    // for the provider-agnostic Consent path that creates the widget dynamically.
     const config: MetamapVerificationConfig = {
-      clientId: this.clientId(),
-      flowId: this.flowId(),
+      clientId: this.clientId() || environment.metamapClientId,
+      flowId: this.flowId() || environment.metamapFlowId,
       language: 'es',
       ...(this.identityId() ? { identityId: this.identityId() } : {}),
     };

@@ -61,7 +61,7 @@ describe('MetamapWidgetComponent — 1. Init / auto-launch config correctness', 
   // ── SLICE 4 (auto-launch): SDK IS auto-launched on init when ready ──────────
   it('auto-launches the SDK on init when MetamapVerification and metamap-button are ready', async () => {
     await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'c-1', flowId: 'f-1' },
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
     });
 
     expect(FakeSdk).toHaveBeenCalledTimes(1);
@@ -76,7 +76,7 @@ describe('MetamapWidgetComponent — 1. Init / auto-launch config correctness', 
     vi.stubGlobal('MetamapVerification', undefined);
 
     await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'c-1', flowId: 'f-1' },
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
     });
 
     expect(screen.getByTestId('metamap-widget-loading')).toBeInTheDocument();
@@ -168,7 +168,7 @@ describe('MetamapWidgetComponent — 3. SDK launch args', () => {
   it('constructs MetamapVerification with clientId, flowId, language=es (no identityId when omitted)', async () => {
     // With auto-launch, the SDK is already constructed on init (no button click needed).
     await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'client-123', flowId: 'flow-456' },
+      componentInputs: { clientId: 'client-123', flowId: 'flow-456', autoLaunch: true },
     });
 
     expect(FakeSdk).toHaveBeenCalledTimes(1);
@@ -183,7 +183,7 @@ describe('MetamapWidgetComponent — 3. SDK launch args', () => {
 
   it('passes identityId when provided', async () => {
     await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'c-1', flowId: 'f-1', identityId: 'id-789' },
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', identityId: 'id-789', autoLaunch: true },
     });
 
     const [cfg] = (FakeSdk as unknown as { mock: { calls: unknown[][] } }).mock.calls[0] as [Record<string, unknown>];
@@ -192,7 +192,7 @@ describe('MetamapWidgetComponent — 3. SDK launch args', () => {
 
   it('calls .start() on the SDK instance', async () => {
     await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'c-1', flowId: 'f-1' },
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
     });
 
     const instances = (FakeSdk as unknown as { instances: FakeSdkInstance[] }).instances;
@@ -224,7 +224,7 @@ describe('MetamapWidgetComponent — 4. Finish → sessionFinished emits verific
 
     // Auto-launch: SDK launched on init, no button click required.
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'c-1', flowId: 'f-1' },
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
     });
 
     fixture.componentInstance.sessionFinished.subscribe((v: string) => finished.push(v));
@@ -243,7 +243,7 @@ describe('MetamapWidgetComponent — 4. Finish → sessionFinished emits verific
 
     // Auto-launch: SDK launched on init.
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'c-1', flowId: 'f-1' },
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
     });
 
     fixture.componentInstance.sessionExited.subscribe(() => exitedCount++);
@@ -275,7 +275,7 @@ describe('MetamapWidgetComponent — 5. NgZone change-detection', () => {
 
   it('updates the view after the SDK finish event — finished signal reflects in DOM', async () => {
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'c-1', flowId: 'f-1' },
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
     });
 
     // Dispatch the event — component uses zone.run() so the `finished` signal update
@@ -293,7 +293,7 @@ describe('MetamapWidgetComponent — 5. NgZone change-detection', () => {
 
   it('hides the launch button after the finish event (signal state = finished)', async () => {
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'c-1', flowId: 'f-1' },
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
     });
 
     window.dispatchEvent(
@@ -326,7 +326,7 @@ describe('MetamapWidgetComponent — 6. SDK load failure → loadError, no throw
     let errorCount = 0;
 
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'c-1', flowId: 'f-1' },
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
     });
 
     fixture.componentInstance.loadError.subscribe(() => errorCount++);
@@ -346,7 +346,7 @@ describe('MetamapWidgetComponent — 6. SDK load failure → loadError, no throw
 
     await expect(async () => {
       const { fixture } = await renderComponent(MetamapWidgetComponent, {
-        componentInputs: { clientId: 'c-1', flowId: 'f-1' },
+        componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
       });
       vi.advanceTimersByTime(2500);
       fixture.detectChanges();
@@ -362,7 +362,7 @@ describe('MetamapWidgetComponent — 6. SDK load failure → loadError, no throw
     const spy = vi.spyOn(customElements, 'get').mockReturnValue(undefined);
 
     await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'c-1', flowId: 'f-1' },
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
     });
 
     vi.advanceTimersByTime(2500);
@@ -377,7 +377,7 @@ describe('MetamapWidgetComponent — 6. SDK load failure → loadError, no throw
     const spy = vi.spyOn(customElements, 'get').mockReturnValue(undefined);
 
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'c-1', flowId: 'f-1' },
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
     });
 
     vi.advanceTimersByTime(2500);
@@ -410,7 +410,7 @@ describe('MetamapWidgetComponent — 7. Listener cleanup on destroy', () => {
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'c-1', flowId: 'f-1' },
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
     });
 
     // Auto-launch registers listeners on init; destroy must clean them up.
@@ -428,7 +428,7 @@ describe('MetamapWidgetComponent — 7. Listener cleanup on destroy', () => {
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'c-1', flowId: 'f-1' },
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
     });
 
     fixture.destroy();
@@ -445,7 +445,7 @@ describe('MetamapWidgetComponent — 7. Listener cleanup on destroy', () => {
     const finished: string[] = [];
 
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'c-1', flowId: 'f-1' },
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
     });
 
     fixture.componentInstance.sessionFinished.subscribe((v: string) => finished.push(v));
@@ -470,7 +470,7 @@ describe('MetamapWidgetComponent — 7. Listener cleanup on destroy', () => {
     const clearIntervalSpy = vi.spyOn(window, 'clearInterval');
 
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'c-1', flowId: 'f-1' },
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
     });
 
     // Destroy before timeout — polling should stop
@@ -567,13 +567,22 @@ describe('MetamapWidgetComponent — 9. autoLaunch=false: on-demand launch via l
     expect(screen.getByTestId('metamap-widget-loading')).toBeInTheDocument();
   });
 
-  it('autoLaunch=true (default) still auto-launches — existing behavior unchanged', async () => {
-    // Omitting autoLaunch → default true → SDK launches on init.
+  it('autoLaunch=true auto-launches when explicitly set', async () => {
+    await renderComponent(MetamapWidgetComponent, {
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
+    });
+
+    expect(FakeSdk).toHaveBeenCalledTimes(1);
+  });
+
+  it('new default: autoLaunch unset → SDK NOT constructed on init', async () => {
+    // The default is now false — widgets created via IdentityVerificationWidget
+    // (Consent's dynamic createComponent) must not auto-launch; they call open().
     await renderComponent(MetamapWidgetComponent, {
       componentInputs: { clientId: 'c-1', flowId: 'f-1' },
     });
 
-    expect(FakeSdk).toHaveBeenCalledTimes(1);
+    expect(FakeSdk).not.toHaveBeenCalled();
   });
 });
 
@@ -626,7 +635,7 @@ describe('MetamapWidgetComponent — 10. IdentityVerificationWidget interface', 
   it('events$ emits finished when metamap:userFinishedSdk fires', async () => {
     const events: Array<{ type: string; verificationId?: string }> = [];
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'c-1', flowId: 'f-1' },
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
     });
 
     fixture.componentInstance.events$.subscribe(e =>
@@ -651,7 +660,7 @@ describe('MetamapWidgetComponent — 10. IdentityVerificationWidget interface', 
 
     const events: Array<{ type: string }> = [];
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'c-1', flowId: 'f-1' },
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
     });
 
     fixture.componentInstance.events$.subscribe(e => events.push(e));
@@ -701,7 +710,7 @@ describe('MetamapWidgetComponent — 8. Auto-launch: no double-launch guard', ()
 
   it('only launches SDK once even if ngAfterViewInit is called multiple times', async () => {
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'c-1', flowId: 'f-1' },
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
     });
 
     // Simulate a second lifecycle call — should NOT double-launch
@@ -715,7 +724,7 @@ describe('MetamapWidgetComponent — 8. Auto-launch: no double-launch guard', ()
     const user = userEvent.setup();
 
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
-      componentInputs: { clientId: 'c-1', flowId: 'f-1' },
+      componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
     });
 
     // After successful auto-launch, no retry button should exist
