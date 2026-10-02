@@ -1,0 +1,9 @@
+{
+  "/origination": {
+    "target": "https://qaoriginacionbe.credix.com",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": { "^/origination": "/origination" }
+  }
+}
