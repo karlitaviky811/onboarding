@@ -10,9 +10,11 @@ export default defineConfig({
       '@credit-application/application': path.resolve(__dirname, 'src/app/features/credit-application/application/index.ts'),
       '@credit-application/infrastructure': path.resolve(__dirname, 'src/app/features/credit-application/infrastructure/index.ts'),
       '@shared/result': path.resolve(__dirname, 'src/app/shared/result'),
+      'crdx-components': path.resolve(__dirname, 'src/testing/crdx-components.mock.ts'),
       '@core/config': path.resolve(__dirname, 'src/app/core/config'),
       '@core/core': path.resolve(__dirname, 'src/app/core/core.ts'),
       '@core/ports': path.resolve(__dirname, 'src/app/core/ports'),
+      '@environments/environment': path.resolve(__dirname, 'src/environments/environment.ts'),
     },
   },
   test: {

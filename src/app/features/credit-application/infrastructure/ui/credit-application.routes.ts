@@ -23,6 +23,11 @@ export const creditApplicationRoutes: Routes = [
           import('./pages/request/consent/consent').then(m => m.Consent),
       },
       {
+        path: 'retomando',
+        loadComponent: () =>
+          import('./pages/request/retomando/retomando').then(m => m.Retomando),
+      },
+      {
         path: 'identity-validation',
         loadComponent: () =>
           import('./pages/identity-validation/identity-validation/identity-validation').then(m => m.IdentityValidation),

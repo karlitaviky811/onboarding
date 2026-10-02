@@ -1,0 +1,47 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+  background: #ffffff;
+}
+
+.retomando {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 100dvh;
+  max-width: 375px;
+  margin-inline: auto;
+  padding: 24px 16px;
+  background: #ffffff;
+}
+
+.retomando__top {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.retomando__heading {
+  margin: 0;
+  font-family: 'Heebo', sans-serif;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 32px;
+  color: #181c1e;
+}
+
+.retomando__subtext {
+  margin: 0;
+  font-family: 'Heebo', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.5px;
+  color: #181c1e;
+}
+
+.retomando__footer {
+  width: 100%;
+}

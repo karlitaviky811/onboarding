@@ -79,6 +79,19 @@ describe('AdminConfigAdapter — preload() and getIdentityProvider()', () => {
     expect(adapter.getIdentityProvider()).toBe('regula');
   });
 
+  // ── FU-1d: Successful config fetch — metamap-widget ───────────────────────────────────────
+
+  it('FU-1d: preload() fetches /admin/config and caches "metamap-widget"', async () => {
+    const preloadPromise = adapter.preload();
+
+    const request = httpController.expectOne('https://api.example.test/admin/config');
+    request.flush({ identityProvider: 'metamap-widget' });
+
+    await preloadPromise;
+
+    expect(adapter.getIdentityProvider()).toBe('metamap-widget');
+  });
+
   // ── FU-1f: Network failure at bootstrap — fallback to default ──────────────────────────────
 
   it('FU-1f: preload() resolves (does not reject) on network error and falls back to "metamap"', async () => {

@@ -1,5 +1,5 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { CreditApplication } from '@credit-application/domain';
+import { CreditApplication, PersonName } from '@credit-application/domain';
 import { UserType } from '@credit-application/domain';
 import { ApplicationStage, ApplicationSubstage } from '@credit-application/domain';
 import {
@@ -32,11 +32,17 @@ export class CreditApplicationFacade {
   private readonly _isLoading         = signal(false);
   private readonly _validationRetries = signal(0);
   private readonly _error             = signal<string | null>(null);
+  /**
+   * Stores the person name fetched from TSE during BasicData.onContinue().
+   * Consumed by the Consent and Retomando screens to greet the user by name.
+   */
+  private readonly _personName        = signal<PersonName | null>(null);
 
   readonly application  = this._application.asReadonly();
   readonly userType     = this._userType.asReadonly();
   readonly isLoading    = this._isLoading.asReadonly();
   readonly error        = this._error.asReadonly();
+  readonly personName   = this._personName.asReadonly();
 
   readonly isFlipClient     = computed(() => this._userType() === UserType.FlipClient);
   readonly isNewClient      = computed(() => this._userType() === UserType.NewClient);
@@ -57,6 +63,10 @@ export class CreditApplicationFacade {
   setApplication(application: CreditApplication): void {
     this._application.set(application);
     this._userType.set(application.userType);
+  }
+
+  setPersonName(name: PersonName): void {
+    this._personName.set(name);
   }
 
   setLoading(loading: boolean): void {
@@ -81,5 +91,6 @@ export class CreditApplicationFacade {
     this._isLoading.set(false);
     this._validationRetries.set(0);
     this._error.set(null);
+    this._personName.set(null);
   }
 }

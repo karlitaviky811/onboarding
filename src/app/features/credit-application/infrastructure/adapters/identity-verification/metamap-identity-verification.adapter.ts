@@ -10,8 +10,8 @@ import { Result, ok, err, DomainError, NetworkError } from '@shared/result/resul
 import { API_BASE_URL } from '@core/config/api.config';
 import { LOGGER } from '@core/core';
 import { Logger } from '@core/ports/logger.port';
-import { IdentityValidationResultDto } from '../metamap/identity-validation-result.dto';
-import { mapDtoToIdentityValidationResult } from '../metamap/identity-validation-result.mapper';
+import { IdentityValidationResultDto } from './identity-validation-result.dto';
+import { mapDtoToIdentityValidationResult } from './identity-validation-result.mapper';
 
 @Injectable({ providedIn: 'root' })
 export class MetamapIdentityVerificationAdapter implements IdentityVerificationPort {

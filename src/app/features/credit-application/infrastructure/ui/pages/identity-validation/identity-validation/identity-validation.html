@@ -1,69 +1,122 @@
 <div class="identity-validation">
-  @switch (state()) {
-    @case ('idle') {
-      <div class="identity-validation__idle">
-        <h2 class="identity-validation__title">Verificación de identidad</h2>
-        <p class="identity-validation__description">
-          Para continuar, necesitamos verificar su identidad de forma segura.
-        </p>
-        <button class="identity-validation__cta" (click)="startVerification()">
-          Iniciar verificación
-        </button>
-      </div>
-    }
+  @if (useWidget) {
+    @switch (state()) {
+      @case ('approved') {
+        <section class="identity-validation__success" aria-live="polite">
+          <h2>Identidad aprobada</h2>
+          <p>Su identidad fue verificada exitosamente. Continuando con su solicitud.</p>
+        </section>
+      }
 
-    @case ('creating') {
-      <div class="identity-validation__loading" aria-live="polite">
-        <span class="identity-validation__spinner"></span>
-        <p>Consultando el estado de su verificación...</p>
-      </div>
-    }
+      @case ('rejected') {
+        <section class="identity-validation__status" aria-live="polite">
+          <h2>Verificación rechazada</h2>
+          <p>No fue posible validar su identidad. Por favor, intente nuevamente.</p>
+        </section>
+      }
 
-    @case ('pending') {
-      <section class="identity-validation__status" aria-live="polite">
-        <h2>Verificación pendiente</h2>
-        <p>Complete el proceso seguro y luego actualice el estado.</p>
-        <button class="identity-validation__cta" (click)="refreshStatus()">Actualizar estado</button>
-      </section>
-    }
+      @case ('manual_review') {
+        <section class="identity-validation__status" aria-live="polite">
+          <h2>Verificación en revisión manual</h2>
+          <p>Estamos revisando su información. Vuelva a consultar el estado más tarde.</p>
+        </section>
+      }
 
-    @case ('approved') {
-      <section class="identity-validation__success" aria-live="polite">
-        <h2>Identidad aprobada</h2>
-        <p>Su identidad fue verificada exitosamente. Continuando con su solicitud.</p>
-      </section>
-    }
+      @case ('failed') {
+        <section class="identity-validation__status" aria-live="polite">
+          <h2>No se pudo completar la verificación</h2>
+          <p>Comuníquese con servicio al cliente para continuar.</p>
+        </section>
+      }
 
-    @case ('rejected') {
-      <section class="identity-validation__status" aria-live="polite">
-        <h2>Verificación rechazada</h2>
-        <p>No fue posible validar su identidad. Puede actualizar el estado si realizó un nuevo intento.</p>
-        <button class="identity-validation__cta" (click)="refreshStatus()">Actualizar estado</button>
-      </section>
-    }
+      @case ('error') {
+        <section class="identity-validation__error" role="alert">
+          <h2>Error en la verificación</h2>
+          <p>{{ errorMessage() }}</p>
+        </section>
+      }
 
-    @case ('manual_review') {
-      <section class="identity-validation__status" aria-live="polite">
-        <h2>Verificación en revisión manual</h2>
-        <p>Estamos revisando su información. Vuelva a consultar el estado más tarde.</p>
-        <button class="identity-validation__cta" (click)="refreshStatus()">Actualizar estado</button>
-      </section>
+      @default {
+        <!-- idle / creating: show the widget component -->
+        <app-metamap-widget
+          [clientId]="widgetClientId()"
+          [flowId]="widgetFlowId()"
+          [identityId]="widgetIdentityId()"
+          [validated]="widgetValidated()"
+          (sessionFinished)="onWidgetFinished($event)"
+          (sessionExited)="onWidgetExited()"
+          (loadError)="onWidgetLoadError()"
+        />
+      }
     }
+  } @else {
+    <!-- Redirect path (default / fallback): unchanged redirect + status-poll flow. -->
+    @switch (state()) {
+      @case ('idle') {
+        <div class="identity-validation__idle">
+          <h2 class="identity-validation__title">Verificación de identidad</h2>
+          <p class="identity-validation__description">
+            Para continuar, necesitamos verificar su identidad de forma segura.
+          </p>
+          <button class="identity-validation__cta" (click)="startVerification()">
+            Iniciar verificación
+          </button>
+        </div>
+      }
 
-    @case ('failed') {
-      <section class="identity-validation__status" aria-live="polite">
-        <h2>No se pudo completar la verificación</h2>
-        <p>Puede actualizar el estado para consultar si el proceso se completó.</p>
-        <button class="identity-validation__cta" (click)="refreshStatus()">Actualizar estado</button>
-      </section>
-    }
+      @case ('creating') {
+        <div class="identity-validation__loading" aria-live="polite">
+          <span class="identity-validation__spinner"></span>
+          <p>Consultando el estado de su verificación...</p>
+        </div>
+      }
 
-    @case ('error') {
-      <section class="identity-validation__error" role="alert">
-        <h2>Error en la verificación</h2>
-        <p>{{ errorMessage() }}</p>
-        <button class="identity-validation__cta" (click)="startVerification()">Reintentar</button>
-      </section>
+      @case ('pending') {
+        <section class="identity-validation__status" aria-live="polite">
+          <h2>Verificación pendiente</h2>
+          <p>Complete el proceso seguro y luego actualice el estado.</p>
+          <button class="identity-validation__cta" (click)="refreshStatus()">Actualizar estado</button>
+        </section>
+      }
+
+      @case ('approved') {
+        <section class="identity-validation__success" aria-live="polite">
+          <h2>Identidad aprobada</h2>
+          <p>Su identidad fue verificada exitosamente. Continuando con su solicitud.</p>
+        </section>
+      }
+
+      @case ('rejected') {
+        <section class="identity-validation__status" aria-live="polite">
+          <h2>Verificación rechazada</h2>
+          <p>No fue posible validar su identidad. Puede actualizar el estado si realizó un nuevo intento.</p>
+          <button class="identity-validation__cta" (click)="refreshStatus()">Actualizar estado</button>
+        </section>
+      }
+
+      @case ('manual_review') {
+        <section class="identity-validation__status" aria-live="polite">
+          <h2>Verificación en revisión manual</h2>
+          <p>Estamos revisando su información. Vuelva a consultar el estado más tarde.</p>
+          <button class="identity-validation__cta" (click)="refreshStatus()">Actualizar estado</button>
+        </section>
+      }
+
+      @case ('failed') {
+        <section class="identity-validation__status" aria-live="polite">
+          <h2>No se pudo completar la verificación</h2>
+          <p>Puede actualizar el estado para consultar si el proceso se completó.</p>
+          <button class="identity-validation__cta" (click)="refreshStatus()">Actualizar estado</button>
+        </section>
+      }
+
+      @case ('error') {
+        <section class="identity-validation__error" role="alert">
+          <h2>Error en la verificación</h2>
+          <p>{{ errorMessage() }}</p>
+          <button class="identity-validation__cta" (click)="startVerification()">Reintentar</button>
+        </section>
+      }
     }
   }
 </div>

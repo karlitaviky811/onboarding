@@ -77,6 +77,19 @@ export const mockInterceptor: HttpInterceptorFn = (req, next) => {
     return mock({ max_retries: 3 });
   }
 
+  // DEV-SMOKE: return the active demo identity provider.
+  // Switching this value swaps the validator — the Consent screen reads the
+  // registry and dynamically creates the matching widget component.
+  // Switchable values: 'metamap-widget' | 'persona-widget' | 'onfido-widget'
+  //   'persona-widget' → Persona sandbox flow (real Persona iframe in ng serve)
+  //   'metamap-widget' → MetaMap flow (requires MetaMap credentials in environment.development.ts)
+  //   'onfido-widget'  → Onfido inline flow (requires onfidoToken in environment.development.ts; token expires 90min)
+  // The specific /servicio-cliente and /reintentos handlers above match FIRST —
+  // this handler fires only for the exact /admin/config endpoint (url.endsWith guard).
+  if (method === 'GET' && url.endsWith('/admin/config')) {
+    return mock({ identityProvider: 'persona-widget' });
+  }
+
   if (method === 'GET' && url.includes('/admin/screens/')) {
     const key = url.split('/admin/screens/').pop() ?? 'unknown';
     return mock({
@@ -103,8 +116,9 @@ export const mockInterceptor: HttpInterceptorFn = (req, next) => {
   if (method === 'GET' && url.includes('/originacion/solicitudes/')) {
     const id = url.split('/originacion/solicitudes/').pop() ?? '';
 
-    // Simulate "not found" for odd IDs to test the "new client" flow
-    if (id.length % 2 === 1) {
+    // EXAMPLE RULE (temporary): 123456789 = new client; any other id = already validated.
+    // findByIdentification returns null when the body is null → DetermineUserTypeUseCase → NewClient.
+    if (id === '123456789') {
       return mock(null, 200);
     }
 

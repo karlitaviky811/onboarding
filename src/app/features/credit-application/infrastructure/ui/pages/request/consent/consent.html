@@ -1,5 +1,58 @@
-
-<!-- TODO: implement from Figma screens -->
 <div class="consent">
-  <p>Consentimiento — pendiente de implementación desde Figma</p>
+  <div class="consent__top">
+    <h1 class="consent__heading">
+      @if (greetingName()) {
+        ¡Hola {{ greetingName() }}!
+      } @else {
+        ¡Hola!
+      }
+    </h1>
+
+    <p class="consent__subtext">
+      Vamos a validar su identificación para continuar con su solicitud.
+    </p>
+
+    <section class="consent__authorizations">
+      <h2 class="consent__section-title">Acepto y autorizo:</h2>
+
+      <lib-checkbox
+        [checked]="acceptedTerms()"
+        (checkedChange)="acceptedTerms.set($event)"
+      >
+        Términos y Condiciones y Política de Privacidad de Credix
+      </lib-checkbox>
+
+      <lib-checkbox
+        [checked]="acceptedOic()"
+        (checkedChange)="acceptedOic.set($event)"
+      >
+        Consulta de información en OIC y C para evaluar la solicitud
+      </lib-checkbox>
+    </section>
+
+    @if (widgetLoadError()) {
+      <p class="consent__error" data-testid="consent-widget-error">
+        No se pudo iniciar la verificación. Por favor, recargue la página e inténtelo de nuevo.
+      </p>
+    }
+  </div>
+
+  <!--
+    Dynamic widget host — the active identity-verification widget is created here
+    at runtime via IDENTITY_WIDGET_REGISTRY (see consent.ts _createAndInitWidget).
+    The widget renders its own modal overlay; this anchor is a zero-size host.
+    Consent never references MetaMap or Persona by name — only the registry + interface.
+  -->
+  <ng-container #widgetHost></ng-container>
+
+  <div class="consent__footer">
+    <lib-button
+      label="Continuar"
+      type="button"
+      variant="filled"
+      [fullWidth]="true"
+      [disabled]="!canContinue()"
+      (click)="onContinue()"
+    />
+  </div>
 </div>

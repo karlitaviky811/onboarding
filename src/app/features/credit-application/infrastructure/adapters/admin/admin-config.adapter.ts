@@ -13,7 +13,7 @@ import { LOGGER } from '@core/core';
 import { Logger } from '@core/ports/logger.port';
 import { AdminRuntimeConfigDto, CustomerServiceConfigDto, MaxRetriesConfigDto } from './admin-config.dto';
 
-const KNOWN_PROVIDERS = ['metamap', 'facetec', 'regula'] as const;
+const KNOWN_PROVIDERS = ['metamap', 'facetec', 'regula', 'metamap-widget', 'persona-widget', 'onfido-widget'] as const;
 type KnownProvider = typeof KNOWN_PROVIDERS[number];
 const DEFAULT_IDENTITY_PROVIDER: KnownProvider = 'metamap';
 

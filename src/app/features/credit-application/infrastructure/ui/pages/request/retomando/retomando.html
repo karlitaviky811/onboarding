@@ -1,0 +1,25 @@
+<div class="retomando">
+  <div class="retomando__top">
+    <h1 class="retomando__heading">
+      @if (greetingName()) {
+        ¡Hola de nuevo {{ greetingName() }}!
+      } @else {
+        ¡Hola de nuevo!
+      }
+    </h1>
+
+    <p class="retomando__subtext">
+      Retomemos desde el último paso que completó.
+    </p>
+  </div>
+
+  <div class="retomando__footer">
+    <lib-button
+      label="Continuar"
+      type="button"
+      variant="filled"
+      [fullWidth]="true"
+      (click)="onContinue()"
+    />
+  </div>
+</div>

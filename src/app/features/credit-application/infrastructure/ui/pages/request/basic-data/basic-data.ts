@@ -1,7 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { LibButtonComponent, LibChipComponent, LibTextFieldComponent, LibSelectFieldComponent } from 'crdx-components';
 import { CreditApplicationFacade } from '@credit-application/application';
-import { IdentificationTypeConfig, ScreenContent } from '@credit-application/domain';
+import {
+  CreditApplication,
+  Identification,
+  IdentificationTypeConfig,
+  IdentificationType,
+  ScreenContent,
+} from '@credit-application/domain';
 import { AdminConfigAdapter } from '../../../../adapters/admin/admin-config.adapter';
 import { ScreenContentAdapter } from '../../../../adapters/screen-content/screen-content.adapter';
 
@@ -40,6 +47,7 @@ interface CountryOption {
 })
 export class BasicData {
   protected readonly facade = inject(CreditApplicationFacade);
+  private readonly router = inject(Router);
   private readonly adminConfig = inject(AdminConfigAdapter);
   private readonly screenContentAdapter = inject(ScreenContentAdapter);
 
@@ -236,11 +244,51 @@ export class BasicData {
     }
   }
 
-  onContinue(): void {
+  /** Maps the raw id-type string from AdminConfig to the domain IdentificationType enum. */
+  private static readonly ID_TYPE_MAP: Record<string, IdentificationType> = {
+    NACIONAL: IdentificationType.National,
+    DIMEX: IdentificationType.DIMEX,
+  };
+
+  async onContinue(): Promise<void> {
     if (!this.canContinue()) return;
-    const idType = this.currentIdType().id;
-    const idNumber = this.idNumber();
-    const contact = this.contact();
-    // TODO: call Core to determine user type with { idType, idNumber, contact }
+
+    const rawIdType = this.currentIdType().id;
+    const idType = BasicData.ID_TYPE_MAP[rawIdType] ?? IdentificationType.National;
+    const identification = new Identification(idType, this.idNumber());
+
+    this.facade.setLoading(true);
+    const result = await this.facade.determineUserType.execute(identification);
+    this.facade.setLoading(false);
+
+    if (!result.success) {
+      this.facade.setError('No se pudo verificar su identidad. Intente nuevamente.');
+      return;
+    }
+
+    const { existingApplication } = result.value;
+
+    if (existingApplication !== null) {
+      this.facade.setApplication(existingApplication);
+    } else {
+      // New client: create a provisional application.
+      // TODO: real application id assigned by Core on save (PR-B/backend)
+      const newApp = CreditApplication.create(identification.number, identification);
+      this.facade.setApplication(newApp);
+    }
+
+    // Fetch the person name from TSE to greet the user on the next screen.
+    // Non-blocking: if TSE fails we still continue navigation.
+    const tseResult = await this.facade.tseQuery.findByIdentification(identification.number);
+    if (tseResult.success && tseResult.value !== null) {
+      this.facade.setPersonName(tseResult.value);
+    }
+
+    // Route by user type:
+    //   NewClient   → Consent screen (new onboarding flow)
+    //   Any other   → Retomando screen (resume existing application)
+    const isNewClient = existingApplication === null;
+    const targetRoute = isNewClient ? '/request/consent' : '/request/retomando';
+    await this.router.navigate([targetRoute]);
   }
 }
