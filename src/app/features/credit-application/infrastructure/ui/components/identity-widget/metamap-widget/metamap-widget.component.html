@@ -1,0 +1,22 @@
+<div class="metamap-widget" data-testid="metamap-widget-container">
+  @if (finished()) {
+    <section class="metamap-widget__finished" data-testid="metamap-widget-finished" aria-live="polite">
+      <p>Verificación completada. Procesando resultado...</p>
+    </section>
+  } @else if (loadFailed()) {
+    <section class="metamap-widget__error" data-testid="metamap-widget-error" aria-live="polite">
+      <p>No se pudo iniciar la verificación. Por favor, inténtelo de nuevo.</p>
+      <button
+        class="metamap-widget__retry-btn"
+        type="button"
+        (click)="retryLaunch()"
+      >
+        Reintentar
+      </button>
+    </section>
+  } @else if (loading()) {
+    <section class="metamap-widget__loading" data-testid="metamap-widget-loading" aria-live="polite">
+      <p>Abriendo verificación...</p>
+    </section>
+  }
+</div>
