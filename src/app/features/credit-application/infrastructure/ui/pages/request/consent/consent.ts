@@ -46,7 +46,7 @@ export class Consent implements AfterViewInit, OnDestroy {
   private readonly widgetRegistry = inject(IDENTITY_WIDGET_REGISTRY);
   private readonly zone = inject(NgZone);
 
-  protected readonly widgetHostRef = viewChild<ViewContainerRef>('widgetHost', { read: ViewContainerRef });
+  protected readonly widgetHostRef = viewChild('widgetHost', { read: ViewContainerRef });
 
   protected readonly acceptedTerms = signal(false);
   protected readonly acceptedOic = signal(false);
