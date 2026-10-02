@@ -25,7 +25,29 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'html'],
-      exclude: ['src/main.ts', 'src/environments/**', '**/*.spec.ts'],
+      exclude: [
+        'src/main.ts',
+        'src/environments/**',
+        '**/*.spec.ts',
+        // Non-shipping scaffolding: routes are commented out in credit-application.routes.ts.
+        // Remove the matching entry here when the stage is wired into the app.
+        '**/pages/kyc/**',
+        '**/pages/personalization/**',
+        '**/pages/activation/**',
+        '**/pages/card-insurance/**',
+        '**/features/onboarding/**',
+        // No testable logic: routing config and re-export barrels.
+        '**/*.routes.ts',
+        '**/index.ts',
+        'src/testing/**',
+      ],
+      // Ratchet floor — raise these as coverage improves; CI should fail if it drops below.
+      thresholds: {
+        statements: 80,
+        lines: 80,
+        functions: 76,
+        branches: 65,
+      },
     },
   },
 });
