@@ -1,12 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { renderComponent } from '../../../../../../../../testing';
 import { OnfidoWidgetComponent } from './onfido-widget.component';
-
-// ── Onfido SDK mock ────────────────────────────────────────────────────────────
-//
-// The 'onfido-sdk-ui' package is mocked entirely.
-// The fake init() returns an instance with a tearDown spy.
 
 interface FakeOnfidoHandle {
   tearDown: ReturnType<typeof vi.fn>;
@@ -37,7 +32,6 @@ vi.mock('onfido-sdk-ui', () => {
   };
 });
 
-// Re-import to get the spy reference for assertions
 import { Onfido } from 'onfido-sdk-ui';
 
 function getLastHandle(): FakeOnfidoHandle {
@@ -56,12 +50,11 @@ describe('OnfidoWidgetComponent — 1. initialize() token validation', () => {
     vi.clearAllMocks();
   });
 
-  it('emits error event when onfidoToken is empty in environment', async () => {
+  test('emits error event when onfidoToken is empty in environment', async () => {
     const events: Array<{ type: string; message?: string }> = [];
     const { fixture } = await renderComponent(OnfidoWidgetComponent);
     fixture.componentInstance.events$.subscribe(e => events.push(e as { type: string; message?: string }));
 
-    // When no token is configured, initialize() must emit an error
     fixture.componentInstance.initialize({ referenceId: 'ref-no-token' });
     fixture.detectChanges();
 
@@ -70,12 +63,11 @@ describe('OnfidoWidgetComponent — 1. initialize() token validation', () => {
     expect(errorEvent?.message).toContain('token');
   });
 
-  it('emits ready event when onfidoToken is present', async () => {
+  test('emits ready event when onfidoToken is present', async () => {
     const events: Array<{ type: string }> = [];
     const { fixture } = await renderComponent(OnfidoWidgetComponent);
     fixture.componentInstance.events$.subscribe(e => events.push(e));
 
-    // Inject a token via the component's testToken input
     fixture.componentInstance['_testToken'] = 'sdk-test-token-123';
     fixture.componentInstance.initialize({ referenceId: 'ref-with-token' });
     fixture.detectChanges();
@@ -83,14 +75,13 @@ describe('OnfidoWidgetComponent — 1. initialize() token validation', () => {
     expect(events).toContainEqual({ type: 'ready' });
   });
 
-  it('does NOT call Onfido.init during initialize()', async () => {
+  test('does NOT call Onfido.init during initialize()', async () => {
     const { fixture } = await renderComponent(OnfidoWidgetComponent);
 
     fixture.componentInstance['_testToken'] = 'sdk-test-token-456';
     fixture.componentInstance.initialize({ referenceId: 'ref-prewarm' });
     fixture.detectChanges();
 
-    // initialize() validates readiness — init is called in open()
     expect(_handles).toHaveLength(0);
   });
 });
@@ -106,7 +97,7 @@ describe('OnfidoWidgetComponent — 2. open() calls Onfido.init', () => {
     vi.clearAllMocks();
   });
 
-  it('calls Onfido.init with token when open() is invoked after initialize()', async () => {
+  test('calls Onfido.init with token when open() is invoked after initialize()', async () => {
     const { fixture } = await renderComponent(OnfidoWidgetComponent);
     fixture.componentInstance['_testToken'] = 'sdk-open-token-789';
     fixture.componentInstance.initialize({ referenceId: 'ref-open' });
@@ -117,7 +108,7 @@ describe('OnfidoWidgetComponent — 2. open() calls Onfido.init', () => {
     expect(_lastInitOptions?.['token']).toBe('sdk-open-token-789');
   });
 
-  it('passes steps array to Onfido.init', async () => {
+  test('passes steps array to Onfido.init', async () => {
     const { fixture } = await renderComponent(OnfidoWidgetComponent);
     fixture.componentInstance['_testToken'] = 'sdk-steps-token';
     fixture.componentInstance.initialize({ referenceId: 'ref-steps' });
@@ -128,12 +119,11 @@ describe('OnfidoWidgetComponent — 2. open() calls Onfido.init', () => {
     expect((_lastInitOptions?.['steps'] as string[]).length).toBeGreaterThan(0);
   });
 
-  it('emits error and does NOT call Onfido.init when no token', async () => {
+  test('emits error and does NOT call Onfido.init when no token', async () => {
     const events: Array<{ type: string }> = [];
     const { fixture } = await renderComponent(OnfidoWidgetComponent);
     fixture.componentInstance.events$.subscribe(e => events.push(e));
 
-    // No token set — open() without a token must emit error without calling init
     fixture.componentInstance.initialize({ referenceId: 'ref-no-token-open' });
     fixture.componentInstance.open();
     fixture.detectChanges();
@@ -154,7 +144,7 @@ describe('OnfidoWidgetComponent — 3. onComplete callback → events$ finished'
     vi.clearAllMocks();
   });
 
-  it('emits finished event when onComplete fires with applicantId', async () => {
+  test('emits finished event when onComplete fires with applicantId', async () => {
     const events: Array<{ type: string; verificationId?: string }> = [];
     const { fixture } = await renderComponent(OnfidoWidgetComponent);
     fixture.componentInstance.events$.subscribe(e => events.push(e as { type: string; verificationId?: string }));
@@ -173,7 +163,7 @@ describe('OnfidoWidgetComponent — 3. onComplete callback → events$ finished'
     expect(finishedEvent?.verificationId).toBeTruthy();
   });
 
-  it('falls back to referenceId when applicant_id is absent', async () => {
+  test('falls back to referenceId when applicant_id is absent', async () => {
     const events: Array<{ type: string; verificationId?: string }> = [];
     const { fixture } = await renderComponent(OnfidoWidgetComponent);
     fixture.componentInstance.events$.subscribe(e => events.push(e as { type: string; verificationId?: string }));
@@ -204,7 +194,7 @@ describe('OnfidoWidgetComponent — 4. onUserExit → events$ exited', () => {
     vi.clearAllMocks();
   });
 
-  it('emits exited event when onUserExit fires', async () => {
+  test('emits exited event when onUserExit fires', async () => {
     const events: Array<{ type: string }> = [];
     const { fixture } = await renderComponent(OnfidoWidgetComponent);
     fixture.componentInstance.events$.subscribe(e => events.push(e));
@@ -233,7 +223,7 @@ describe('OnfidoWidgetComponent — 5. onError → events$ error', () => {
     vi.clearAllMocks();
   });
 
-  it('emits error event with message when onError fires', async () => {
+  test('emits error event with message when onError fires', async () => {
     const events: Array<{ type: string; message?: string }> = [];
     const { fixture } = await renderComponent(OnfidoWidgetComponent);
     fixture.componentInstance.events$.subscribe(e => events.push(e as { type: string; message?: string }));
@@ -251,6 +241,25 @@ describe('OnfidoWidgetComponent — 5. onError → events$ error', () => {
     expect(errorEvent).toBeDefined();
     expect(errorEvent?.message).toBe('SDK token expired');
   });
+
+  test('falls back to String(error) when onError fires without a message', async () => {
+    const events: Array<{ type: string; message?: string }> = [];
+    const { fixture } = await renderComponent(OnfidoWidgetComponent);
+    fixture.componentInstance.events$.subscribe(e => events.push(e as { type: string; message?: string }));
+
+    fixture.componentInstance['_testToken'] = 'sdk-error-nomsg-token';
+    fixture.componentInstance.initialize({ referenceId: 'ref-error-nomsg' });
+    fixture.componentInstance.open();
+    fixture.detectChanges();
+
+    const handle = getLastHandle();
+    handle._onError?.({ type: 'unknown_error' } as { type: string; message: string });
+    fixture.detectChanges();
+
+    const errorEvent = events.find(e => e.type === 'error');
+    expect(errorEvent).toBeDefined();
+    expect(errorEvent?.message).toBeTruthy();
+  });
 });
 
 describe('OnfidoWidgetComponent — 6. destroy() calls tearDown', () => {
@@ -264,7 +273,7 @@ describe('OnfidoWidgetComponent — 6. destroy() calls tearDown', () => {
     vi.clearAllMocks();
   });
 
-  it('calls tearDown on the Onfido handle when destroy() is invoked', async () => {
+  test('calls tearDown on the Onfido handle when destroy() is invoked', async () => {
     const { fixture } = await renderComponent(OnfidoWidgetComponent);
     fixture.componentInstance['_testToken'] = 'sdk-destroy-token';
     fixture.componentInstance.initialize({ referenceId: 'ref-destroy' });
@@ -277,7 +286,7 @@ describe('OnfidoWidgetComponent — 6. destroy() calls tearDown', () => {
     expect(handle.tearDown).toHaveBeenCalledTimes(1);
   });
 
-  it('does NOT throw when destroy() is called before open()', async () => {
+  test('does NOT throw when destroy() is called before open()', async () => {
     const { fixture } = await renderComponent(OnfidoWidgetComponent);
 
     await expect(() => {

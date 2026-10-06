@@ -77,15 +77,7 @@ export const mockInterceptor: HttpInterceptorFn = (req, next) => {
     return mock({ max_retries: 3 });
   }
 
-  // DEV-SMOKE: return the active demo identity provider.
-  // Switching this value swaps the validator — the Consent screen reads the
-  // registry and dynamically creates the matching widget component.
-  // Switchable values: 'metamap-widget' | 'persona-widget' | 'onfido-widget'
-  //   'persona-widget' → Persona sandbox flow (real Persona iframe in ng serve)
-  //   'metamap-widget' → MetaMap flow (requires MetaMap credentials in environment.development.ts)
-  //   'onfido-widget'  → Onfido inline flow (requires onfidoToken in environment.development.ts; token expires 90min)
-  // The specific /servicio-cliente and /reintentos handlers above match FIRST —
-  // this handler fires only for the exact /admin/config endpoint (url.endsWith guard).
+
   if (method === 'GET' && url.endsWith('/admin/config')) {
     return mock({ identityProvider: 'persona-widget' });
   }
@@ -212,7 +204,6 @@ export const mockInterceptor: HttpInterceptorFn = (req, next) => {
     });
   }
 
-  // ── KYC Session ───────────────────────────────────────────────────────────
   if (method === 'POST' && url.includes('/kyc/session')) {
     const body = req.body as { provider?: string; identificationNumber?: string };
     const provider = body.provider ?? 'metamap';
@@ -222,9 +213,5 @@ export const mockInterceptor: HttpInterceptorFn = (req, next) => {
     });
   }
 
-  // ── Credit Bureau (not yet implemented but reserved) ──────────────────────
-  // if (method === 'POST' && url.includes('/buro-credito/consulta')) { ... }
-
-  // Pass through anything we don't mock
   return next(req);
 };

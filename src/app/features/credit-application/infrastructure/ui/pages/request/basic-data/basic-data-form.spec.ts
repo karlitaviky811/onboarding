@@ -1,10 +1,4 @@
-/**
- * BasicData — form interaction tests (branch coverage).
- *
- * Covers: constructor async branches (adminConfig success, screenContent success),
- * selectIdType, onIdValueChange, onIdBlur, onPhoneValueChange, onPhoneBlur,
- * onEmailValueChange, onEmailBlur, onCountryChange.
- */
+import { describe, test, expect, vi } from 'vitest';
 import { Router } from '@angular/router';
 import { signal } from '@angular/core';
 import {
@@ -16,13 +10,11 @@ import {
   ScreenContent,
 } from '@credit-application/domain';
 import { CreditApplicationFacade } from '@credit-application/application';
-import { ok, err, NetworkError } from '@shared/result/result';
+import { ok, err, NetworkError, Result, DomainError } from '@shared/result/result';
 import { renderComponent } from '../../../../../../../../testing';
 import { BasicData } from './basic-data';
 import { AdminConfigAdapter } from '../../../../adapters/admin/admin-config.adapter';
 import { ScreenContentAdapter } from '../../../../adapters/screen-content/screen-content.adapter';
-
-// ── helpers ──────────────────────────────────────────────────────────────────
 
 const MOCK_ID_TYPES: IdentificationTypeConfig[] = [
   { id: 'NACIONAL', label: 'Nacional', mask: '#-####-####', maxLength: 9, isDefault: true },
@@ -54,7 +46,7 @@ function createFacade() {
 }
 
 async function renderBasicData(
-  adminConfigResult = ok(MOCK_ID_TYPES),
+  adminConfigResult: Result<IdentificationTypeConfig[], DomainError> = ok(MOCK_ID_TYPES),
   screenContentResult: { success: boolean; value?: ScreenContent; error?: unknown } = ok(MOCK_SCREEN_CONTENT),
 ) {
   const router = { navigate: vi.fn().mockResolvedValue(true) };
@@ -79,29 +71,25 @@ async function renderBasicData(
   return { fixture, facade, router, adminConfig, screenContentAdapter };
 }
 
-// ── Constructor async branches ────────────────────────────────────────────────
-
 describe('BasicData — constructor async data loading', () => {
-  it('updates identificationTypes signal when adminConfig returns success', async () => {
+  test('updates identificationTypes signal when adminConfig returns success', async () => {
     const { fixture } = await renderBasicData(ok(MOCK_ID_TYPES));
     await fixture.whenStable();
 
-    // After the async call resolves, identificationTypes should hold the mocked types
     const types = fixture.componentInstance.identificationTypes();
     expect(types).toEqual(MOCK_ID_TYPES);
   });
 
-  it('keeps default identificationTypes when adminConfig returns failure', async () => {
+  test('keeps default identificationTypes when adminConfig returns failure', async () => {
     const { fixture } = await renderBasicData(err(new NetworkError()));
     await fixture.whenStable();
 
-    // On failure, defaults are kept (2 defaults: NACIONAL + DIMEX)
     const types = fixture.componentInstance.identificationTypes();
     expect(types.length).toBeGreaterThan(0);
     expect(types[0].id).toBe('NACIONAL');
   });
 
-  it('updates screenContent signal when screenContentAdapter returns success', async () => {
+  test('updates screenContent signal when screenContentAdapter returns success', async () => {
     const { fixture } = await renderBasicData(ok(MOCK_ID_TYPES), ok(MOCK_SCREEN_CONTENT));
     await fixture.whenStable();
 
@@ -110,43 +98,38 @@ describe('BasicData — constructor async data loading', () => {
     expect(content.media.gifUrl).toBe('/img/test.gif');
   });
 
-  it('keeps default screenContent when screenContentAdapter returns failure', async () => {
+  test('keeps default screenContent when screenContentAdapter returns failure', async () => {
     const { fixture } = await renderBasicData(ok(MOCK_ID_TYPES), err(new NetworkError()));
     await fixture.whenStable();
 
-    // Default headline is 'Su tarjeta está muy cerca'
     const content = fixture.componentInstance.screenContent();
     expect(content.copy.headline).toBeTruthy();
     expect(content.copy.ctaLabel).toBe('Continuar');
   });
 });
 
-// ── selectIdType ─────────────────────────────────────────────────────────────
-
 describe('BasicData — selectIdType()', () => {
-  it('is a no-op when the same index is selected again', async () => {
+  test('is a no-op when the same index is selected again', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
 
-    // Start at 0
     expect(comp['selectedIndex']()).toBe(0);
 
-    comp.selectIdType(0); // same index — should not change anything
+    comp.selectIdType(0);
     expect(comp['selectedIndex']()).toBe(0);
     expect(comp['idNumber']()).toBe('');
   });
 
-  it('clears idNumber, errors, and contact data when switching type', async () => {
+  test('clears idNumber, errors, and contact data when switching type', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
 
-    // Pre-populate state
     comp['idNumber'].set('111111111');
     comp['idError'].set('some error');
     comp['contact'].set({ countryCode: '+1', phone: '12345678', email: 'a@b.com' });
     comp['showContactFields'].set(true);
 
-    comp.selectIdType(1); // switch to DIMEX
+    comp.selectIdType(1);
 
     expect(comp['selectedIndex']()).toBe(1);
     expect(comp['idNumber']()).toBe('');
@@ -156,10 +139,8 @@ describe('BasicData — selectIdType()', () => {
   });
 });
 
-// ── onIdValueChange ──────────────────────────────────────────────────────────
-
 describe('BasicData — onIdValueChange()', () => {
-  it('sets idNumber and clears idError', async () => {
+  test('sets idNumber and clears idError', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
     comp['idError'].set('old error');
@@ -170,7 +151,7 @@ describe('BasicData — onIdValueChange()', () => {
     expect(comp['idError']()).toBeNull();
   });
 
-  it('hides contact fields if they were visible and a new ID is being typed', async () => {
+  test('hides contact fields if they were visible and a new ID is being typed', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
     comp['showContactFields'].set(true);
@@ -182,31 +163,31 @@ describe('BasicData — onIdValueChange()', () => {
     expect(comp['contact']()).toEqual({ countryCode: '+506', phone: '', email: '' });
   });
 
-  it('sets isIdLoading when the value reaches the required length (NACIONAL = 9)', async () => {
+  test('sets isIdLoading when the value reaches the required length (NACIONAL = 9)', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
 
     vi.useFakeTimers();
-    comp.onIdValueChange('123456789'); // exactly 9 chars
+    comp.onIdValueChange('123456789');
 
     expect(comp['isIdLoading']()).toBe(true);
     vi.useRealTimers();
   });
 
-  it('does NOT set isIdLoading if value is shorter than required', async () => {
+  test('does NOT set isIdLoading if value is shorter than required', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
 
-    comp.onIdValueChange('1234'); // shorter than 9
+    comp.onIdValueChange('1234');
     expect(comp['isIdLoading']()).toBe(false);
   });
 
-  it('showContactFields becomes true after the 1.5s timeout fires', async () => {
+  test('showContactFields becomes true after the 1.5s timeout fires', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
 
     vi.useFakeTimers();
-    comp.onIdValueChange('123456789'); // exactly 9
+    comp.onIdValueChange('123456789');
 
     expect(comp['isIdLoading']()).toBe(true);
     expect(comp['showContactFields']()).toBe(false);
@@ -219,10 +200,8 @@ describe('BasicData — onIdValueChange()', () => {
   });
 });
 
-// ── onIdBlur ─────────────────────────────────────────────────────────────────
-
 describe('BasicData — onIdBlur()', () => {
-  it('sets idTouched to true', async () => {
+  test('sets idTouched to true', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
 
@@ -230,30 +209,30 @@ describe('BasicData — onIdBlur()', () => {
     expect(comp['idTouched']()).toBe(true);
   });
 
-  it('shows an error when value is incomplete (length > 0 but < required)', async () => {
+  test('shows an error when value is incomplete (length > 0 but < required)', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
-    comp['idNumber'].set('1234'); // less than 9
+    comp['idNumber'].set('1234');
 
     comp.onIdBlur();
 
     expect(comp['idError']()).toContain('9');
   });
 
-  it('does NOT show an error when idNumber is empty', async () => {
+  test('does NOT show an error when idNumber is empty', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
-    comp['idNumber'].set(''); // empty
+    comp['idNumber'].set('');
 
     comp.onIdBlur();
 
     expect(comp['idError']()).toBeNull();
   });
 
-  it('does NOT show an error when value is exactly the required length', async () => {
+  test('does NOT show an error when value is exactly the required length', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
-    comp['idNumber'].set('123456789'); // exactly 9
+    comp['idNumber'].set('123456789');
 
     comp.onIdBlur();
 
@@ -261,10 +240,8 @@ describe('BasicData — onIdBlur()', () => {
   });
 });
 
-// ── onPhoneValueChange / onPhoneBlur ─────────────────────────────────────────
-
 describe('BasicData — phone interactions', () => {
-  it('onPhoneValueChange updates phone and clears phoneError', async () => {
+  test('onPhoneValueChange updates phone and clears phoneError', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
     comp['phoneError'].set('old phone error');
@@ -275,7 +252,7 @@ describe('BasicData — phone interactions', () => {
     expect(comp['phoneError']()).toBeNull();
   });
 
-  it('onPhoneBlur sets phoneTouched', async () => {
+  test('onPhoneBlur sets phoneTouched', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
 
@@ -283,7 +260,7 @@ describe('BasicData — phone interactions', () => {
     expect(comp['phoneTouched']()).toBe(true);
   });
 
-  it('onPhoneBlur sets error for short phone (length > 0 but < 8)', async () => {
+  test('onPhoneBlur sets error for short phone (length > 0 but < 8)', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
     comp['contact'].set({ countryCode: '+506', phone: '1234', email: '' });
@@ -293,7 +270,7 @@ describe('BasicData — phone interactions', () => {
     expect(comp['phoneError']()).toContain('8');
   });
 
-  it('onPhoneBlur does NOT set error when phone is empty', async () => {
+  test('onPhoneBlur does NOT set error when phone is empty', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
     comp['contact'].set({ countryCode: '+506', phone: '', email: '' });
@@ -303,7 +280,7 @@ describe('BasicData — phone interactions', () => {
     expect(comp['phoneError']()).toBeNull();
   });
 
-  it('onPhoneBlur does NOT set error when phone has exactly 8 digits', async () => {
+  test('onPhoneBlur does NOT set error when phone has exactly 8 digits', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
     comp['contact'].set({ countryCode: '+506', phone: '88888888', email: '' });
@@ -314,10 +291,8 @@ describe('BasicData — phone interactions', () => {
   });
 });
 
-// ── onEmailValueChange / onEmailBlur ─────────────────────────────────────────
-
 describe('BasicData — email interactions', () => {
-  it('onEmailValueChange updates email and clears emailError', async () => {
+  test('onEmailValueChange updates email and clears emailError', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
     comp['emailError'].set('old email error');
@@ -328,7 +303,7 @@ describe('BasicData — email interactions', () => {
     expect(comp['emailError']()).toBeNull();
   });
 
-  it('onEmailBlur sets emailTouched', async () => {
+  test('onEmailBlur sets emailTouched', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
 
@@ -336,7 +311,7 @@ describe('BasicData — email interactions', () => {
     expect(comp['emailTouched']()).toBe(true);
   });
 
-  it('onEmailBlur sets error for invalid email format', async () => {
+  test('onEmailBlur sets error for invalid email format', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
     comp['contact'].set({ countryCode: '+506', phone: '', email: 'not-an-email' });
@@ -347,7 +322,7 @@ describe('BasicData — email interactions', () => {
     expect(comp['emailError']()).toContain('correo');
   });
 
-  it('onEmailBlur does NOT set error when email is empty', async () => {
+  test('onEmailBlur does NOT set error when email is empty', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
     comp['contact'].set({ countryCode: '+506', phone: '', email: '' });
@@ -357,7 +332,7 @@ describe('BasicData — email interactions', () => {
     expect(comp['emailError']()).toBeNull();
   });
 
-  it('onEmailBlur does NOT set error for a valid email', async () => {
+  test('onEmailBlur does NOT set error for a valid email', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
     comp['contact'].set({ countryCode: '+506', phone: '', email: 'valid@test.com' });
@@ -368,10 +343,8 @@ describe('BasicData — email interactions', () => {
   });
 });
 
-// ── onCountryChange ───────────────────────────────────────────────────────────
-
 describe('BasicData — onCountryChange()', () => {
-  it('updates countryCode when passed a string', async () => {
+  test('updates countryCode when passed a string', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
 
@@ -380,7 +353,7 @@ describe('BasicData — onCountryChange()', () => {
     expect(comp['contact']().countryCode).toBe('+1');
   });
 
-  it('updates countryCode when passed an array (takes first element)', async () => {
+  test('updates countryCode when passed an array (takes first element)', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
 
@@ -389,7 +362,7 @@ describe('BasicData — onCountryChange()', () => {
     expect(comp['contact']().countryCode).toBe('+52');
   });
 
-  it('does NOT update countryCode when passed null', async () => {
+  test('does NOT update countryCode when passed null', async () => {
     const { fixture } = await renderBasicData();
     const comp = fixture.componentInstance;
     comp['contact'].set({ countryCode: '+506', phone: '', email: '' });

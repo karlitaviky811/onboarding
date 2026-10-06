@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, test, expect, vi, afterEach } from 'vitest';
 import { ConsoleLogger } from './console-logger.adapter';
 
 describe('ConsoleLogger', () => {
@@ -6,7 +6,7 @@ describe('ConsoleLogger', () => {
     vi.restoreAllMocks();
   });
 
-  it('delegates debug() to console.debug', () => {
+  test('delegates debug() to console.debug', () => {
     const spy = vi.spyOn(console, 'debug').mockImplementation(() => {});
     const logger = new ConsoleLogger();
 
@@ -15,7 +15,7 @@ describe('ConsoleLogger', () => {
     expect(spy).toHaveBeenCalledWith('debug message', { extra: 1 });
   });
 
-  it('delegates info() to console.info', () => {
+  test('delegates info() to console.info', () => {
     const spy = vi.spyOn(console, 'info').mockImplementation(() => {});
     const logger = new ConsoleLogger();
 
@@ -24,7 +24,7 @@ describe('ConsoleLogger', () => {
     expect(spy).toHaveBeenCalledWith('info message', 42);
   });
 
-  it('delegates warn() to console.warn', () => {
+  test('delegates warn() to console.warn', () => {
     const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const logger = new ConsoleLogger();
 
@@ -33,7 +33,7 @@ describe('ConsoleLogger', () => {
     expect(spy).toHaveBeenCalledWith('warn message');
   });
 
-  it('delegates error() to console.error', () => {
+  test('delegates error() to console.error', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const logger = new ConsoleLogger();
 
@@ -42,7 +42,7 @@ describe('ConsoleLogger', () => {
     expect(spy).toHaveBeenCalledWith('error message', new Error('oops'));
   });
 
-  it('forwards multiple meta arguments', () => {
+  test('forwards multiple meta arguments', () => {
     const spy = vi.spyOn(console, 'info').mockImplementation(() => {});
     const logger = new ConsoleLogger();
 

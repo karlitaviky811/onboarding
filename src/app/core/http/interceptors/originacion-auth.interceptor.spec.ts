@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import {
   provideHttpClient,
@@ -14,16 +14,6 @@ import {
   ORIGINACION_AUTH,
 } from '@core/config/originacion.config';
 
-/**
- * Spec for originacionAuthInterceptor.
- *
- * ASSUMPTION (PR-B OQ-3): The exact auth scheme (Basic header vs body-embedded
- *   credentials) is unconfirmed. This interceptor attaches an Authorization:Basic
- *   header when auth is provided and the URL targets Originación.
- *   If the backend requires body-embedded creds (as GitCreditoWeb does), this
- *   interceptor and the adapter must be updated in PR-B.
- *   Tests currently verify header attachment; body-merge is a PR-B concern.
- */
 describe('originacionAuthInterceptor', () => {
   let http: HttpClient;
   let httpController: HttpTestingController;
@@ -56,7 +46,7 @@ describe('originacionAuthInterceptor', () => {
   describe('when URL targets Originación and auth is provided', () => {
     beforeEach(() => setupTestBed(BASE_URL, VALID_AUTH));
 
-    it('attaches Authorization header to requests matching the Originación base URL', () => {
+    test('attaches Authorization header to requests matching the Originación base URL', () => {
       http.post(`${BASE_URL}/validations/getmetamapbuttondata`, {}).subscribe();
 
       const req = httpController.expectOne(
@@ -64,14 +54,14 @@ describe('originacionAuthInterceptor', () => {
       );
 
       expect(req.request.headers.has('Authorization')).toBe(true);
-      // Basic auth format: "Basic base64(username:password)"
+
       const expectedToken = btoa(`${VALID_AUTH.username}:${VALID_AUTH.password}`);
       expect(req.request.headers.get('Authorization')).toBe(`Basic ${expectedToken}`);
 
       req.flush({});
     });
 
-    it('attaches auth to /origination proxy prefix path', () => {
+    test('attaches auth to /origination proxy prefix path', () => {
       http.post('/origination/validations/savevalidationverification', {}).subscribe();
 
       const req = httpController.expectOne(
@@ -86,18 +76,17 @@ describe('originacionAuthInterceptor', () => {
   describe('when URL does NOT target Originación', () => {
     beforeEach(() => setupTestBed(BASE_URL, VALID_AUTH));
 
-    it('passes through requests to other URLs unchanged (no Authorization header added)', () => {
+    test('passes through requests to other URLs unchanged (no Authorization header added)', () => {
       http.get('https://other-service.example.com/api/data').subscribe();
 
       const req = httpController.expectOne('https://other-service.example.com/api/data');
 
-      // Should NOT add Originación-specific auth header
       expect(req.request.headers.has('Authorization')).toBe(false);
 
       req.flush({});
     });
 
-    it('passes through requests to the app apiUrl', () => {
+    test('passes through requests to the app apiUrl', () => {
       http.get('http://localhost:3000/admin/config').subscribe();
 
       const req = httpController.expectOne('http://localhost:3000/admin/config');
@@ -109,29 +98,21 @@ describe('originacionAuthInterceptor', () => {
   describe('when auth token is null (production path)', () => {
     beforeEach(() => setupTestBed(BASE_URL, null));
 
-    it('passes through Originación requests without Authorization header when auth is null', () => {
+    test('passes through Originación requests without Authorization header when auth is null', () => {
       http.post(`${BASE_URL}/validations/getmetamapbuttondata`, {}).subscribe();
 
       const req = httpController.expectOne(
         `${BASE_URL}/validations/getmetamapbuttondata`,
       );
 
-      // Production: no creds in browser — interceptor is a no-op
       expect(req.request.headers.has('Authorization')).toBe(false);
 
       req.flush({});
     });
   });
 
-  // ── mockInterceptor pass-through guard ────────────────────────────────────
-  // Verify that the mockInterceptor URL patterns do NOT collide with /origination/*
-
   describe('mockInterceptor URL collision guard', () => {
-    it('mock interceptor does NOT match /origination/validations/* (different from /originacion/solicitudes/)', () => {
-      // This test documents the invariant: the mock interceptor uses
-      // url.includes('/originacion/solicitudes/') (Spanish, credix-core path)
-      // Our adapter uses /origination/validations/* (English, Originación QA path)
-      // These are different — no collision.
+    test('mock interceptor does NOT match /origination/validations/* (different from /originacion/solicitudes/)', () => {
       const mockRelevantPath = '/originacion/solicitudes/';
       const ourPath = '/origination/validations/getmetamapbuttondata';
 
@@ -140,10 +121,8 @@ describe('originacionAuthInterceptor', () => {
     });
   });
 
-  // ── Security invariant ────────────────────────────────────────────────────
-
   describe('security invariant', () => {
-    it('interceptor source does NOT contain literal credential strings', async () => {
+    test('interceptor source does NOT contain literal credential strings', async () => {
       const { readFileSync } = await import('fs');
       const { resolve } = await import('path');
 

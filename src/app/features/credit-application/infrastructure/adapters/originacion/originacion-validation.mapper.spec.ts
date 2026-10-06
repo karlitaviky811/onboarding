@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, test, expect } from 'vitest';
 import {
   mapButtonDataResponse,
   mapSaveVerificationResponse,
@@ -8,9 +8,8 @@ import {
   SaveValidationVerificationResponseDto,
 } from './originacion-validation.dto';
 
-
 describe('mapButtonDataResponse', () => {
-  it('maps all fields from DTO to view model', () => {
+  test('maps all fields from DTO to view model', () => {
     const dto: GetMetamapButtonDataResponseDto = {
       clientId: 'client-abc',
       workflowId: 'flow-xyz',
@@ -26,7 +25,7 @@ describe('mapButtonDataResponse', () => {
     expect(vm.validated).toBe(0);
   });
 
-  it('maps DTO without identityId (identityId is optional)', () => {
+  test('maps DTO without identityId (identityId is optional)', () => {
     const dto: GetMetamapButtonDataResponseDto = {
       clientId: 'client-abc',
       workflowId: 'flow-xyz',
@@ -41,7 +40,7 @@ describe('mapButtonDataResponse', () => {
     expect(vm.validated).toBe(1);
   });
 
-  it('maps validated=1 (already validated) correctly', () => {
+  test('maps validated=1 (already validated) correctly', () => {
     const dto: GetMetamapButtonDataResponseDto = {
       clientId: 'c',
       workflowId: 'w',
@@ -54,7 +53,7 @@ describe('mapButtonDataResponse', () => {
 });
 
 describe('mapSaveVerificationResponse', () => {
-  it('delegates to mapVerdict and returns a VerdictOutcome for verified status', () => {
+  test('delegates to mapVerdict and returns a VerdictOutcome for verified status', () => {
     const dto: SaveValidationVerificationResponseDto = {
       status: 'verified',
       triesLeft: 1,
@@ -64,10 +63,10 @@ describe('mapSaveVerificationResponse', () => {
 
     expect(outcome.state).toBe('approved');
     expect(outcome.route).toBe('/request/result');
-    expect(outcome.triesLeft).toBe(2); // 3 - 1 = 2
+    expect(outcome.triesLeft).toBe(2);
   });
 
-  it('delegates to mapVerdict for rejected status', () => {
+  test('delegates to mapVerdict for rejected status', () => {
     const dto: SaveValidationVerificationResponseDto = {
       status: 'rejected',
       triesLeft: 2,
@@ -76,10 +75,10 @@ describe('mapSaveVerificationResponse', () => {
     const outcome = mapSaveVerificationResponse(dto);
 
     expect(outcome.state).toBe('rejected');
-    expect(outcome.triesLeft).toBe(1); // 3 - 2 = 1
+    expect(outcome.triesLeft).toBe(1);
   });
 
-  it('delegates to mapVerdict for support status', () => {
+  test('delegates to mapVerdict for support status', () => {
     const dto: SaveValidationVerificationResponseDto = {
       status: 'support',
       triesLeft: 0,
@@ -88,10 +87,10 @@ describe('mapSaveVerificationResponse', () => {
     const outcome = mapSaveVerificationResponse(dto);
 
     expect(outcome.state).toBe('manual_review');
-    expect(outcome.triesLeft).toBe(3); // 3 - 0 = 3
+    expect(outcome.triesLeft).toBe(3);
   });
 
-  it('delegates to mapVerdict for identificationNoMatch', () => {
+  test('delegates to mapVerdict for identificationNoMatch', () => {
     const dto: SaveValidationVerificationResponseDto = {
       status: 'identificationNoMatch',
       triesLeft: 1,
@@ -102,7 +101,7 @@ describe('mapSaveVerificationResponse', () => {
     expect(outcome.state).toBe('rejected');
   });
 
-  it('delegates to mapVerdict for limitReached', () => {
+  test('delegates to mapVerdict for limitReached', () => {
     const dto: SaveValidationVerificationResponseDto = {
       status: 'limitReached',
       triesLeft: 3,
@@ -111,10 +110,10 @@ describe('mapSaveVerificationResponse', () => {
     const outcome = mapSaveVerificationResponse(dto);
 
     expect(outcome.state).toBe('failed');
-    expect(outcome.triesLeft).toBe(0); // 3 - 3 = 0
+    expect(outcome.triesLeft).toBe(0);
   });
 
-  it('handles null triesLeft (not-applicable case)', () => {
+  test('handles null triesLeft (not-applicable case)', () => {
     const dto: SaveValidationVerificationResponseDto = {
       status: 'verified',
       triesLeft: null as unknown as number,

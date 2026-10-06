@@ -1,12 +1,4 @@
-/**
- * MetamapWidgetComponent — extra branch coverage.
- *
- * Covers:
- * - retryLaunch() (line 219): clears error state and restarts the launch sequence
- * - polling success: SDK becomes ready after a few poll ticks (lines 197-202)
- * - identityId omitted branch in _executeLaunch (line 66 — the `{}` spread)
- */
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { renderComponent } from '../../../../../../../../testing';
 import { MetamapWidgetComponent } from './metamap-widget.component';
@@ -34,8 +26,6 @@ function stubCustomElementsGet(present = true) {
   );
 }
 
-// ── retryLaunch() ─────────────────────────────────────────────────────────────
-
 describe('MetamapWidgetComponent — retryLaunch()', () => {
   let FakeSdk: ReturnType<typeof makeFakeSdkClass>;
   let customElementsSpy: ReturnType<typeof vi.spyOn>;
@@ -53,31 +43,28 @@ describe('MetamapWidgetComponent — retryLaunch()', () => {
     TestBed.resetTestingModule();
   });
 
-  it('retryLaunch() resets loadFailed and loading then launches the SDK', async () => {
+  test('retryLaunch() resets loadFailed and loading then launches the SDK', async () => {
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
       componentInputs: { clientId: 'c-retry', flowId: 'f-retry', autoLaunch: false },
     });
     const comp = fixture.componentInstance;
 
-    // Simulate a previous load failure state
     comp.loadFailed.set(true);
     comp.loading.set(false);
 
     comp.retryLaunch();
     fixture.detectChanges();
 
-    // Should have cleared load-failed state and launched
     expect(comp.loadFailed()).toBe(false);
     expect(FakeSdk).toHaveBeenCalledTimes(1);
   });
 
-  it('retryLaunch() is a no-op when already launched (finished = true)', async () => {
+  test('retryLaunch() is a no-op when already launched (finished = true)', async () => {
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
       componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: false },
     });
     const comp = fixture.componentInstance;
 
-    // Mark as finished
     comp.finished.set(true);
 
     comp.retryLaunch();
@@ -86,23 +73,19 @@ describe('MetamapWidgetComponent — retryLaunch()', () => {
     expect(FakeSdk).not.toHaveBeenCalled();
   });
 
-  it('retryLaunch() is a no-op when already launched (_launched=true)', async () => {
+  test('retryLaunch() is a no-op when already launched (_launched=true)', async () => {
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
       componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: false },
     });
     const comp = fixture.componentInstance;
 
-    // Manually trigger launch first
     comp.launchSdk();
     const sdkCallCount = (FakeSdk as unknown as { mock: { calls: unknown[][] } }).mock.calls.length;
 
-    // retryLaunch should not trigger another launch
     comp.retryLaunch();
     expect((FakeSdk as unknown as { mock: { calls: unknown[][] } }).mock.calls.length).toBe(sdkCallCount);
   });
 });
-
-// ── Polling success path (SDK ready after poll tick) ─────────────────────────
 
 describe('MetamapWidgetComponent — polling resolves when SDK becomes ready', () => {
   afterEach(() => {
@@ -111,10 +94,9 @@ describe('MetamapWidgetComponent — polling resolves when SDK becomes ready', (
     TestBed.resetTestingModule();
   });
 
-  it('launches the SDK when it becomes ready after a poll interval', async () => {
+  test('launches the SDK when it becomes ready after a poll interval', async () => {
     vi.useFakeTimers();
 
-    // SDK NOT ready initially
     vi.stubGlobal('MetamapVerification', undefined);
     const spy = vi.spyOn(customElements, 'get').mockReturnValue(undefined);
 
@@ -128,11 +110,9 @@ describe('MetamapWidgetComponent — polling resolves when SDK becomes ready', (
     comp.pollIntervalMs = 100;
     comp.pollMaxAttempts = 10;
 
-    // SDK is now ready: install before the next tick
     vi.stubGlobal('MetamapVerification', FakeSdk);
     spy.mockReturnValue(class {} as unknown as CustomElementConstructor);
 
-    // Advance by one polling interval — sdkReady() will return true
     vi.advanceTimersByTime(150);
     fixture.detectChanges();
 
@@ -141,7 +121,7 @@ describe('MetamapWidgetComponent — polling resolves when SDK becomes ready', (
     spy.mockRestore();
   });
 
-  it('clears polling and sets loadFailed when max attempts are exceeded', async () => {
+  test('clears polling and sets loadFailed when max attempts are exceeded', async () => {
     vi.useFakeTimers();
     vi.stubGlobal('MetamapVerification', undefined);
     const spy = vi.spyOn(customElements, 'get').mockReturnValue(undefined);
@@ -150,7 +130,6 @@ describe('MetamapWidgetComponent — polling resolves when SDK becomes ready', (
       componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
     });
 
-    // Exhaust all polling attempts
     vi.advanceTimersByTime(2500);
     fixture.detectChanges();
 
@@ -159,8 +138,6 @@ describe('MetamapWidgetComponent — polling resolves when SDK becomes ready', (
     spy.mockRestore();
   });
 });
-
-// ── events$ stream ─────────────────────────────────────────────────────────────
 
 describe('MetamapWidgetComponent — events$ emits for finish and exit', () => {
   let FakeSdk: ReturnType<typeof makeFakeSdkClass>;
@@ -178,7 +155,7 @@ describe('MetamapWidgetComponent — events$ emits for finish and exit', () => {
     TestBed.resetTestingModule();
   });
 
-  it('events$ emits { type: "finished", verificationId } when SDK finishes', async () => {
+  test('events$ emits { type: "finished", verificationId } when SDK finishes', async () => {
     const events: Array<{ type: string; verificationId?: string }> = [];
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
       componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
@@ -195,7 +172,7 @@ describe('MetamapWidgetComponent — events$ emits for finish and exit', () => {
     expect(finished?.verificationId).toBe('v-events-1');
   });
 
-  it('events$ emits { type: "exited" } when user exits the SDK', async () => {
+  test('events$ emits { type: "exited" } when user exits the SDK', async () => {
     const events: Array<{ type: string }> = [];
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
       componentInputs: { clientId: 'c-1', flowId: 'f-1', autoLaunch: true },
@@ -208,7 +185,7 @@ describe('MetamapWidgetComponent — events$ emits for finish and exit', () => {
     expect(events).toContainEqual({ type: 'exited' });
   });
 
-  it('events$ emits { type: "finished", verificationId: "ALREADY_VALIDATED" } on validated short-circuit', async () => {
+  test('events$ emits { type: "finished", verificationId: "ALREADY_VALIDATED" } on validated short-circuit', async () => {
     const events: Array<{ type: string; verificationId?: string }> = [];
     const { fixture } = await renderComponent(MetamapWidgetComponent, {
       componentInputs: { clientId: 'c-1', flowId: 'f-1', validated: 0 },

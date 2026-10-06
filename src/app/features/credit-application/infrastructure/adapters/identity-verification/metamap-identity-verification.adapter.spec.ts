@@ -1,3 +1,4 @@
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -31,7 +32,7 @@ describe('MetamapIdentityVerificationAdapter', () => {
     httpController.verify();
   });
 
-  it('returns approved result with validatedIdentificationNumber on success (approved data-match)', async () => {
+  test('returns approved result with validatedIdentificationNumber on success (approved data-match)', async () => {
     const resultPromise = adapter.verify('123456789', 'NationalValidation');
 
     const request = httpController.expectOne('https://api.example.test/validacion/identidad');
@@ -52,13 +53,13 @@ describe('MetamapIdentityVerificationAdapter', () => {
     if (result.success) {
       expect(result.value.approved).toBe(true);
       expect(result.value.validatedIdentificationNumber).toBe('123456789');
-      // Superset invariant: data-match adapter MUST NOT set redirectUrl or verificationId
+
       expect(result.value.redirectUrl).toBeUndefined();
       expect(result.value.verificationId).toBeUndefined();
     }
   });
 
-  it('returns rejected result with errorCode on rejection (rejected data-match)', async () => {
+  test('returns rejected result with errorCode on rejection (rejected data-match)', async () => {
     const resultPromise = adapter.verify('123456789', 'NationalValidation');
 
     const request = httpController.expectOne('https://api.example.test/validacion/identidad');
@@ -76,7 +77,7 @@ describe('MetamapIdentityVerificationAdapter', () => {
     }
   });
 
-  it('returns approved:false with validatedIdentificationNumber set to backend value on mismatch', async () => {
+  test('returns approved:false with validatedIdentificationNumber set to backend value on mismatch', async () => {
     const resultPromise = adapter.verify('123456789', 'NationalValidation');
 
     const request = httpController.expectOne('https://api.example.test/validacion/identidad');
@@ -92,7 +93,7 @@ describe('MetamapIdentityVerificationAdapter', () => {
     }
   });
 
-  it('returns Result.failure(NetworkError) on HTTP error (network error yields timeout outcome)', async () => {
+  test('returns Result.failure(NetworkError) on HTTP error (network error yields timeout outcome)', async () => {
     const resultPromise = adapter.verify('123456789', 'NationalValidation');
 
     const request = httpController.expectOne('https://api.example.test/validacion/identidad');
@@ -107,7 +108,7 @@ describe('MetamapIdentityVerificationAdapter', () => {
     }
   });
 
-  it('passes the correct flow for DIMEXValidation', async () => {
+  test('passes the correct flow for DIMEXValidation', async () => {
     const resultPromise = adapter.verify('123456789', 'DIMEXValidation');
 
     const request = httpController.expectOne('https://api.example.test/validacion/identidad');

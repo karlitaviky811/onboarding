@@ -17,27 +17,10 @@ export const environment = {
     username: 'sts_sac',
     password: '<<QA-hash-from-ops>>',
   } as { username: string; password: string } | null,
-  /**
-   * DEV SMOKE: paste your MetaMap clientId here to launch the widget locally.
-   * With ng serve (mockEnabled: true), /admin/config returns 'metamap-widget'
-   * so the page renders the widget. Fill in these values from your MetaMap dashboard.
-   * PR-B replaces this with a real backend fetch (getButtonData) — these fields
-   * will no longer be needed once the Credix Originación backend is wired.
-   */
-  metamapClientId: '6abedc6afb833c58dae1bb72',   // DEV SMOKE clientId
-  metamapFlowId: '6abedc6a3f95e74332a9ea56',  // NEEDS CONFIRMATION: verify this is the real workflowId from MetaMap dashboard / getmetamapbuttondata
-  /**
-   * Persona sandbox template — same across environments (sandbox data only).
-   * Switch the mock interceptor's identityProvider value to 'persona-widget' to
-   * demo Persona's real sandbox flow in ng serve.
-   */
+
+  metamapClientId: '6834ec0eac885d85d6417fc6',   // DEV SMOKE clientId
+  metamapFlowId: '692f32ad72b6fa85b7f85440',  // NEEDS CONFIRMATION: verify this is the real workflowId from MetaMap dashboard / getmetamapbuttondata
   personaTemplateId: 'itmpl_Ygs16MKTkA6obnF8C3Rb17dm',
   personaEnvironment: 'sandbox' as const,
-  /**
-   * DEV: paste a sandbox SDK token here to demo the Onfido widget in ng serve.
-   * Generate via: POST https://api.onfido.com/v3.6/sdk_token (requires API key + applicant_id).
-   * Tokens expire after 90 minutes. Switch the mock interceptor's identityProvider
-   * to 'onfido-widget' to activate this widget in the dev server.
-   */
-  onfidoToken: '',  // DEV: paste a sandbox SDK token (generate via Onfido API; expires 90min)
+  onfidoToken: '',  
 };

@@ -1,14 +1,16 @@
-import { describe, it, expect } from 'vitest';
+import { describe, test, expect } from 'vitest';
 import { CreditApplication } from './credit-application';
 import { Identification, IdentificationType } from '../value-objects/identification';
 import { UserType } from '../value-objects/user-type';
 import { ApplicationStage, ApplicationSubstage } from '../value-objects/application-stage';
+import { ApplicationProgress } from '../value-objects/application-progress';
+import { ApplicantProfile } from './applicant-profile';
 import { StageAdvancedEvent } from '../events/stage-advanced.event';
 
 describe('CreditApplication', () => {
   const identification = new Identification(IdentificationType.National, '123456789');
 
-  it('create should initialize with correct defaults', () => {
+  test('create should initialize with correct defaults', () => {
     const app = CreditApplication.create('app-1', identification);
 
     expect(app.id).toBe('app-1');
@@ -21,7 +23,7 @@ describe('CreditApplication', () => {
     expect(app.createdAt).toBeInstanceOf(Date);
   });
 
-  it('withUserType should return a new instance without mutating the original', () => {
+  test('withUserType should return a new instance without mutating the original', () => {
     const app = CreditApplication.create('app-1', identification);
     const updated = app.withUserType(UserType.FlipClient);
 
@@ -30,7 +32,7 @@ describe('CreditApplication', () => {
     expect(updated).not.toBe(app);
   });
 
-  it('advanceTo should update progress', () => {
+  test('advanceTo should update progress', () => {
     const app = CreditApplication.create('app-1', identification);
     const updated = app.advanceTo(ApplicationStage.IdentityValidation, ApplicationSubstage.IdentityValidationStep);
 
@@ -39,7 +41,7 @@ describe('CreditApplication', () => {
     expect(updated.currentProgress.isCompleted()).toBe(true);
   });
 
-  it('recordProgress should append to log', () => {
+  test('recordProgress should append to log', () => {
     const app = CreditApplication.create('app-1', identification);
     const updated = app.recordProgress(ApplicationStage.Request, ApplicationSubstage.Consent, 'success');
 
@@ -48,7 +50,7 @@ describe('CreditApplication', () => {
     expect(updated.progressLog[0].substage).toBe(ApplicationSubstage.Consent);
   });
 
-  it('isFlipClient should work correctly', () => {
+  test('isFlipClient should work correctly', () => {
     const app = CreditApplication.create('app-1', identification).withUserType(UserType.FlipClient);
     expect(app.isFlipClient()).toBe(true);
 
@@ -56,7 +58,7 @@ describe('CreditApplication', () => {
     expect(notFlip.isFlipClient()).toBe(false);
   });
 
-  it('isExistingClient should work correctly', () => {
+  test('isExistingClient should work correctly', () => {
     expect(CreditApplication.create('app-1', identification).withUserType(UserType.ClientWithCard).isExistingClient()).toBe(true);
     expect(CreditApplication.create('app-2', identification).withUserType(UserType.ClientWithoutCard).isExistingClient()).toBe(true);
     expect(CreditApplication.create('app-3', identification).withUserType(UserType.FlipClient).isExistingClient()).toBe(true);
@@ -64,7 +66,7 @@ describe('CreditApplication', () => {
     expect(CreditApplication.create('app-5', identification).withUserType(UserType.Prospect).isExistingClient()).toBe(false);
   });
 
-  it('isResuming should work correctly', () => {
+  test('isResuming should work correctly', () => {
     const app = CreditApplication.create('app-1', identification).withUserType(UserType.Prospect);
     expect(app.isResuming()).toBe(true);
 
@@ -72,7 +74,7 @@ describe('CreditApplication', () => {
     expect(notResuming.isResuming()).toBe(false);
   });
 
-  it('domain events should be populated on advanceTo', () => {
+  test('domain events should be populated on advanceTo', () => {
     const app = CreditApplication.create('app-1', identification);
     expect(app.events.length).toBe(0);
 
@@ -87,7 +89,7 @@ describe('CreditApplication', () => {
     expect((event as StageAdvancedEvent).substage).toBe(ApplicationSubstage.IdentityValidationStep);
   });
 
-  it('clearEvents should return a copy with empty events', () => {
+  test('clearEvents should return a copy with empty events', () => {
     const app = CreditApplication.create('app-1', identification)
       .advanceTo(ApplicationStage.IdentityValidation, ApplicationSubstage.IdentityValidationStep);
 
@@ -96,5 +98,37 @@ describe('CreditApplication', () => {
     const cleared = app.clearEvents();
     expect(cleared.events.length).toBe(0);
     expect(cleared).not.toBe(app);
+  });
+
+  test('reconstruct should build an application from persistent data without emitting events', () => {
+    const progress = ApplicationProgress.initial();
+    const profile = new ApplicantProfile('123456789', 'NACIONAL', 'Ana', 'Pérez');
+    const createdAt = new Date('2026-01-01T00:00:00.000Z');
+
+    const app = CreditApplication.reconstruct(
+      'app-recon-1',
+      identification,
+      UserType.Prospect,
+      progress,
+      profile,
+      [],
+      'Approved',
+      createdAt,
+    );
+
+    expect(app.id).toBe('app-recon-1');
+    expect(app.userType).toBe(UserType.Prospect);
+    expect(app.result).toBe('Approved');
+    expect(app.createdAt).toEqual(createdAt);
+    expect(app.events.length).toBe(0);
+  });
+
+  test('withResult returns new instance with the given result and does not mutate original', () => {
+    const app = CreditApplication.create('app-1', identification);
+    expect(app.result).toBeUndefined();
+
+    const withApproved = app.withResult('Approved');
+    expect(withApproved.result).toBe('Approved');
+    expect(app.result).toBeUndefined();
   });
 });

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import { ValidateIdentityUseCase } from '../../application/use-cases/validate-identity.use-case';
 import { IdentityVerificationPort } from '../ports/identity-verification.port';
 import { Identification, IdentificationType } from '../value-objects/identification';
@@ -9,7 +9,7 @@ describe('ValidateIdentityUseCase', () => {
   const identification = new Identification(IdentificationType.National, '123456789');
   const profile = new ApplicantProfile('123456789', 'NACIONAL');
 
-  it('should return CustomerService when retries are exhausted', async () => {
+  test('should return CustomerService when retries are exhausted', async () => {
     const port: IdentityVerificationPort = {
       verify: vi.fn(),
     };
@@ -21,7 +21,7 @@ describe('ValidateIdentityUseCase', () => {
     expect(port.verify).not.toHaveBeenCalled();
   });
 
-  it('should resolve NationalValidation flow for National type without prior validation', async () => {
+  test('should resolve NationalValidation flow for National type without prior validation', async () => {
     const port: IdentityVerificationPort = {
       verify: vi.fn().mockResolvedValue(ok({ approved: true })),
     };
@@ -32,7 +32,7 @@ describe('ValidateIdentityUseCase', () => {
     expect(port.verify).toHaveBeenCalledWith('123456789', 'NationalValidation');
   });
 
-  it('should resolve DIMEXValidation flow for DIMEX type', async () => {
+  test('should resolve DIMEXValidation flow for DIMEX type', async () => {
     const dimexId = new Identification(IdentificationType.DIMEX, '123456789');
     const port: IdentityVerificationPort = {
       verify: vi.fn().mockResolvedValue(ok({ approved: true })),
@@ -44,7 +44,7 @@ describe('ValidateIdentityUseCase', () => {
     expect(port.verify).toHaveBeenCalledWith('123456789', 'DIMEXValidation');
   });
 
-  it('should resolve Revalidation flow when profile has validated identity', async () => {
+  test('should resolve Revalidation flow when profile has validated identity', async () => {
     const validatedProfile = new ApplicantProfile('123456789', 'NACIONAL', undefined, undefined, undefined, new Date());
     const port: IdentityVerificationPort = {
       verify: vi.fn().mockResolvedValue(ok({ approved: true })),
@@ -56,7 +56,7 @@ describe('ValidateIdentityUseCase', () => {
     expect(port.verify).toHaveBeenCalledWith('123456789', 'Revalidation');
   });
 
-  it('should return Approved when verification succeeds', async () => {
+  test('should return Approved when verification succeeds', async () => {
     const port: IdentityVerificationPort = {
       verify: vi.fn().mockResolvedValue(ok({ approved: true })),
     };
@@ -67,7 +67,7 @@ describe('ValidateIdentityUseCase', () => {
     expect(result.outcome).toBe('Approved');
   });
 
-  it('should return NotApproved when verification is not approved', async () => {
+  test('should return NotApproved when verification is not approved', async () => {
     const port: IdentityVerificationPort = {
       verify: vi.fn().mockResolvedValue(ok({ approved: false })),
     };
@@ -78,7 +78,7 @@ describe('ValidateIdentityUseCase', () => {
     expect(result.outcome).toBe('NotApproved');
   });
 
-  it('should return Mismatch when validated number differs (approved:false)', async () => {
+  test('should return Mismatch when validated number differs (approved:false)', async () => {
     const port: IdentityVerificationPort = {
       verify: vi.fn().mockResolvedValue(ok({ approved: false, validatedIdentificationNumber: '999' })),
     };
@@ -89,7 +89,7 @@ describe('ValidateIdentityUseCase', () => {
     expect(result.outcome).toBe('Mismatch');
   });
 
-  it('should return Timeout on network error', async () => {
+  test('should return Timeout on network error', async () => {
     const port: IdentityVerificationPort = {
       verify: vi.fn().mockResolvedValue(err(new NetworkError())),
     };
@@ -100,7 +100,7 @@ describe('ValidateIdentityUseCase', () => {
     expect(result.outcome).toBe('Timeout');
   });
 
-  it('should return CustomerService when retries are exhausted after Mismatch (UC-5)', async () => {
+  test('should return CustomerService when retries are exhausted after Mismatch (UC-5)', async () => {
     const port: IdentityVerificationPort = {
       verify: vi.fn().mockResolvedValue(ok({ approved: false, validatedIdentificationNumber: '999' })),
     };
@@ -112,7 +112,7 @@ describe('ValidateIdentityUseCase', () => {
     expect(port.verify).not.toHaveBeenCalled();
   });
 
-  it('should return Redirect when verify returns redirectUrl (UC-7)', async () => {
+  test('should return Redirect when verify returns redirectUrl (UC-7)', async () => {
     const port: IdentityVerificationPort = {
       verify: vi.fn().mockResolvedValue(
         ok({ approved: false, redirectUrl: 'https://verify.example.test/session/abc', verificationId: 'v-123' }),
@@ -127,7 +127,7 @@ describe('ValidateIdentityUseCase', () => {
     expect(result.result?.verificationId).toBe('v-123');
   });
 
-  it('should NOT increment retries for Redirect outcome (UC-7 retry-gate invariant)', async () => {
+  test('should NOT increment retries for Redirect outcome (UC-7 retry-gate invariant)', async () => {
     const port: IdentityVerificationPort = {
       verify: vi.fn().mockResolvedValue(
         ok({ approved: false, redirectUrl: 'https://verify.example.test/session/xyz', verificationId: 'v-456' }),
@@ -135,9 +135,21 @@ describe('ValidateIdentityUseCase', () => {
     };
 
     const useCase = new ValidateIdentityUseCase(port);
-    // Even with retriesUsed = maxRetries - 1 (one away from exhaustion), Redirect does NOT consume a retry
+
     const result = await useCase.execute(identification, profile, 2, 3);
 
     expect(result.outcome).toBe('Redirect');
+  });
+
+  test('returns Timeout for a non-NetworkError failure (generic error branch)', async () => {
+    const { err: errFn, DomainError } = await import('@shared/result/result');
+    const port: IdentityVerificationPort = {
+      verify: vi.fn().mockResolvedValue(errFn(new DomainError('Some other error', 'OTHER_ERROR'))),
+    };
+
+    const useCase = new ValidateIdentityUseCase(port);
+    const result = await useCase.execute(identification, profile, 0, 3);
+
+    expect(result.outcome).toBe('Timeout');
   });
 });

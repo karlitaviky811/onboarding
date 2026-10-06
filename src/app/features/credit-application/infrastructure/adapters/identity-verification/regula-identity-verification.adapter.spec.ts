@@ -1,3 +1,4 @@
+import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { LOGGER } from '@core/core';
 import { RegulaIdentityVerificationAdapter } from './regula-identity-verification.adapter';
@@ -21,7 +22,7 @@ describe('RegulaIdentityVerificationAdapter', () => {
     adapter = TestBed.inject(RegulaIdentityVerificationAdapter);
   });
 
-  it('returns a stub result (approved:false, redirectUrl undefined, verificationId undefined)', async () => {
+  test('returns a stub result (approved:false, redirectUrl undefined, verificationId undefined)', async () => {
     const result = await adapter.verify('123456789', 'NationalValidation');
 
     expect(result.success).toBe(true);
@@ -32,7 +33,7 @@ describe('RegulaIdentityVerificationAdapter', () => {
     }
   });
 
-  it('logs a warn message indicating the adapter is not implemented', async () => {
+  test('logs a warn message indicating the adapter is not implemented', async () => {
     await adapter.verify('123456789', 'NationalValidation');
 
     expect(logger.warn).toHaveBeenCalledWith(

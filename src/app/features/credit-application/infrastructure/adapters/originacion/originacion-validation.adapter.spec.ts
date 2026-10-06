@@ -1,11 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { NetworkError } from '@shared/result/result';
 import { OriginacionValidationAdapter } from './originacion-validation.adapter';
 import { ORIGINACION_BASE_URL, ORIGINACION_CHANNEL_ID } from '@core/config/originacion.config';
-
 
 describe('OriginacionValidationAdapter', () => {
   let adapter: OriginacionValidationAdapter;
@@ -32,10 +31,8 @@ describe('OriginacionValidationAdapter', () => {
     httpController.verify();
   });
 
-  // ── getButtonData ──────────────────────────────────────────────────────────
-
   describe('getButtonData()', () => {
-    it('POSTs to /validations/getmetamapbuttondata with expected body shape', async () => {
+    test('POSTs to /validations/getmetamapbuttondata with expected body shape', async () => {
       const resultPromise = adapter.getButtonData('PLACEHOLDER_VALIDATION_ID');
 
       const req = httpController.expectOne(
@@ -64,7 +61,7 @@ describe('OriginacionValidationAdapter', () => {
       }
     });
 
-    it('returns ok with validated=1 when user is already verified', async () => {
+    test('returns ok with validated=1 when user is already verified', async () => {
       const resultPromise = adapter.getButtonData('PLACEHOLDER_VALIDATION_ID');
 
       const req = httpController.expectOne(
@@ -84,7 +81,7 @@ describe('OriginacionValidationAdapter', () => {
       }
     });
 
-    it('returns Result.failure(NetworkError) on HTTP error', async () => {
+    test('returns Result.failure(NetworkError) on HTTP error', async () => {
       const resultPromise = adapter.getButtonData('PLACEHOLDER_VALIDATION_ID');
 
       const req = httpController.expectOne(
@@ -100,7 +97,7 @@ describe('OriginacionValidationAdapter', () => {
       }
     });
 
-    it('does NOT throw on HTTP error (must return Result, never throw)', async () => {
+    test('does NOT throw on HTTP error (must return Result, never throw)', async () => {
       const resultPromise = adapter.getButtonData('PLACEHOLDER_VALIDATION_ID');
 
       const req = httpController.expectOne(
@@ -108,15 +105,12 @@ describe('OriginacionValidationAdapter', () => {
       );
       req.flush('Gateway Timeout', { status: 504, statusText: 'Gateway Timeout' });
 
-      // Must resolve, not reject
       await expect(resultPromise).resolves.toMatchObject({ success: false });
     });
   });
 
-  // ── saveVerification ───────────────────────────────────────────────────────
-
   describe('saveVerification()', () => {
-    it('POSTs to /validations/savevalidationverification with expected body', async () => {
+    test('POSTs to /validations/savevalidationverification with expected body', async () => {
       const resultPromise = adapter.saveVerification(
         'PLACEHOLDER_VALIDATION_ID',
         'verification-v-001',
@@ -140,11 +134,11 @@ describe('OriginacionValidationAdapter', () => {
       if (result.success) {
         expect(result.value.state).toBe('approved');
         expect(result.value.route).toBe('/request/result');
-        expect(result.value.triesLeft).toBe(2); // 3 - 1 = 2
+        expect(result.value.triesLeft).toBe(2);
       }
     });
 
-    it('maps rejected status to rejected outcome', async () => {
+    test('maps rejected status to rejected outcome', async () => {
       const resultPromise = adapter.saveVerification(
         'PLACEHOLDER_VALIDATION_ID',
         'v-rejected',
@@ -162,7 +156,7 @@ describe('OriginacionValidationAdapter', () => {
       }
     });
 
-    it('returns Result.failure(NetworkError) on HTTP error', async () => {
+    test('returns Result.failure(NetworkError) on HTTP error', async () => {
       const resultPromise = adapter.saveVerification(
         'PLACEHOLDER_VALIDATION_ID',
         'v-error',
@@ -180,7 +174,7 @@ describe('OriginacionValidationAdapter', () => {
       }
     });
 
-    it('does NOT throw on HTTP error', async () => {
+    test('does NOT throw on HTTP error', async () => {
       const resultPromise = adapter.saveVerification(
         'PLACEHOLDER_VALIDATION_ID',
         'v-timeout',
@@ -195,12 +189,8 @@ describe('OriginacionValidationAdapter', () => {
     });
   });
 
-  // ── Security: no inline credentials ───────────────────────────────────────
-
   describe('security invariant', () => {
-    it('adapter source does NOT contain literal credential strings', async () => {
-      // Read the adapter source file and assert no hardcoded credentials.
-      // This is a static analysis test — verifies the constraint mechanically.
+    test('adapter source does NOT contain literal credential strings', async () => {
       const { readFileSync } = await import('fs');
       const { resolve } = await import('path');
 

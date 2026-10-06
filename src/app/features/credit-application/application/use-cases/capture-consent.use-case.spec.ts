@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import { CaptureConsentUseCase } from './capture-consent.use-case';
 import { CreditApplication } from '../../domain/entities/credit-application';
 import { Identification, IdentificationType } from '../../domain/value-objects/identification';
@@ -24,7 +24,7 @@ function makeRepo(saveResult: ReturnType<typeof ok<CreditApplication>> | ReturnT
 }
 
 describe('CaptureConsentUseCase', () => {
-  it('saves the updated application with consent attached', async () => {
+  test('saves the updated application with consent attached', async () => {
     const repo = makeRepo(ok(baseApp));
     const useCase = new CaptureConsentUseCase(repo);
 
@@ -32,12 +32,12 @@ describe('CaptureConsentUseCase', () => {
 
     expect(result.success).toBe(true);
     expect(repo.save).toHaveBeenCalledTimes(1);
-    // The saved application must have advanced to IdentityValidation stage (enum value: VALIDACION_IDENTIDAD)
+
     const savedApp: CreditApplication = (repo.save as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(savedApp.currentProgress.stage).toBe('VALIDACION_IDENTIDAD');
   });
 
-  it('propagates the repository error when save fails', async () => {
+  test('propagates the repository error when save fails', async () => {
     const error = new NetworkError();
     const repo = makeRepo(err(error));
     const useCase = new CaptureConsentUseCase(repo);
@@ -50,7 +50,7 @@ describe('CaptureConsentUseCase', () => {
     }
   });
 
-  it('throws when consent data is invalid (not all accepted)', async () => {
+  test('throws when consent data is invalid (not all accepted)', async () => {
     const repo = makeRepo(ok(baseApp));
     const useCase = new CaptureConsentUseCase(repo);
 

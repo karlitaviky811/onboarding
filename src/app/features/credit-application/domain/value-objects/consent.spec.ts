@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, test, expect } from 'vitest';
 import { Consent } from './consent';
 
 describe('Consent', () => {
-  it('create should return error when any checkbox is false', () => {
+  test('create should return error when any checkbox is false', () => {
     const result = Consent.create({
       acceptedTermsAndConditions: true,
       acceptedPrivacyPolicy: true,
@@ -16,7 +16,7 @@ describe('Consent', () => {
     }
   });
 
-  it('create should return ok when all are true', () => {
+  test('create should return ok when all are true', () => {
     const result = Consent.create({
       acceptedTermsAndConditions: true,
       acceptedPrivacyPolicy: true,

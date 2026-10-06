@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import { ResumeApplicationUseCase } from './resume-application.use-case';
 import { CreditApplication } from '../../domain/entities/credit-application';
 import { Identification, IdentificationType } from '../../domain/value-objects/identification';
@@ -16,7 +16,7 @@ function makeRepo(findResult: ReturnType<typeof ok<CreditApplication | null>> | 
 }
 
 describe('ResumeApplicationUseCase', () => {
-  it('returns null when no application is found for the identification', async () => {
+  test('returns null when no application is found for the identification', async () => {
     const repo = makeRepo(ok(null));
     const useCase = new ResumeApplicationUseCase(repo);
 
@@ -28,7 +28,7 @@ describe('ResumeApplicationUseCase', () => {
     }
   });
 
-  it('returns the application and resumeFrom when an existing application is found', async () => {
+  test('returns the application and resumeFrom when an existing application is found', async () => {
     const existingApp = CreditApplication.create('app-1', identification);
     const repo = makeRepo(ok(existingApp));
     const useCase = new ResumeApplicationUseCase(repo);
@@ -43,7 +43,7 @@ describe('ResumeApplicationUseCase', () => {
     }
   });
 
-  it('propagates the repository error when findByIdentification fails', async () => {
+  test('propagates the repository error when findByIdentification fails', async () => {
     const error = new NetworkError();
     const repo = makeRepo(err(error));
     const useCase = new ResumeApplicationUseCase(repo);

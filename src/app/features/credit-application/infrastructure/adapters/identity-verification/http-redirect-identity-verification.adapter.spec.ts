@@ -1,3 +1,4 @@
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -32,7 +33,7 @@ describe('HttpRedirectIdentityVerificationAdapter', () => {
   });
 
   describe('verify()', () => {
-    it('posts to /identity-verifications and maps interactionUrl→redirectUrl, id→verificationId (redirect flow returned)', async () => {
+    test('posts to /identity-verifications and maps interactionUrl→redirectUrl, id→verificationId (redirect flow returned)', async () => {
       const resultPromise = adapter.verify('123456789', 'NationalValidation');
 
       const request = httpController.expectOne('https://api.example.test/identity-verifications');
@@ -49,18 +50,17 @@ describe('HttpRedirectIdentityVerificationAdapter', () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        // Redirect adapters return approved:false (redirect is not approval)
         expect(result.value.approved).toBe(false);
-        // interactionUrl maps to redirectUrl
+
         expect(result.value.redirectUrl).toBe('https://verify.example.test/session/456');
-        // id maps to verificationId
+
         expect(result.value.verificationId).toBe('verification-456');
-        // Superset invariant: redirect adapter MUST NOT set validatedIdentificationNumber
+
         expect(result.value.validatedIdentificationNumber).toBeUndefined();
       }
     });
 
-    it('returns approved:false with no redirectUrl when backend returns no interactionUrl', async () => {
+    test('returns approved:false with no redirectUrl when backend returns no interactionUrl', async () => {
       const resultPromise = adapter.verify('123456789', 'NationalValidation');
 
       const request = httpController.expectOne('https://api.example.test/identity-verifications');
@@ -79,7 +79,21 @@ describe('HttpRedirectIdentityVerificationAdapter', () => {
       }
     });
 
-    it('returns Result.failure(NetworkError) on HTTP error (network error yields timeout outcome)', async () => {
+    test('leaves verificationId undefined when the backend value is not a string', async () => {
+      const resultPromise = adapter.verify('123456789', 'NationalValidation');
+
+      const request = httpController.expectOne('https://api.example.test/identity-verifications');
+      request.flush({ verificationId: 42, status: 'pending' });
+
+      const result = await resultPromise;
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.value.verificationId).toBeUndefined();
+      }
+    });
+
+    test('returns Result.failure(NetworkError) on HTTP error (network error yields timeout outcome)', async () => {
       const resultPromise = adapter.verify('123456789', 'NationalValidation');
 
       const request = httpController.expectOne('https://api.example.test/identity-verifications');
@@ -96,7 +110,7 @@ describe('HttpRedirectIdentityVerificationAdapter', () => {
   });
 
   describe('getStatus()', () => {
-    it('polls GET /identity-verifications/:id and returns status result', async () => {
+    test('polls GET /identity-verifications/:id and returns status result', async () => {
       const resultPromise = adapter.getStatus('verification-456');
 
       const request = httpController.expectOne(
@@ -117,7 +131,23 @@ describe('HttpRedirectIdentityVerificationAdapter', () => {
       }
     });
 
-    it('returns Result.failure(NetworkError) when GET /identity-verifications/:id fails', async () => {
+    test("defaults status to 'unknown' when the backend omits a string status", async () => {
+      const resultPromise = adapter.getStatus('verification-456');
+
+      const request = httpController.expectOne(
+        'https://api.example.test/identity-verifications/verification-456',
+      );
+      request.flush({ verificationId: 'verification-456' });
+
+      const result = await resultPromise;
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.value.status).toBe('unknown');
+      }
+    });
+
+    test('returns Result.failure(NetworkError) when GET /identity-verifications/:id fails', async () => {
       const resultPromise = adapter.getStatus('verification-456');
 
       const request = httpController.expectOne(
@@ -133,7 +163,7 @@ describe('HttpRedirectIdentityVerificationAdapter', () => {
       }
     });
 
-    it('URL-encodes the verificationId when polling status', async () => {
+    test('URL-encodes the verificationId when polling status', async () => {
       const resultPromise = adapter.getStatus('verify/id-with-slash');
 
       const request = httpController.expectOne(

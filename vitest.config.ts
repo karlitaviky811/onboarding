@@ -18,7 +18,7 @@ export default defineConfig({
     },
   },
   test: {
-    globals: true,
+    globals: false,
     environment: 'happy-dom',
     setupFiles: ['src/test-setup.ts'],
     include: ['src/**/*.spec.ts'],
@@ -43,10 +43,10 @@ export default defineConfig({
       ],
       // Ratchet floor — raise these as coverage improves; CI should fail if it drops below.
       thresholds: {
-        statements: 80,
-        lines: 80,
-        functions: 76,
-        branches: 65,
+        statements: 90,
+        lines: 90,
+        functions: 90,
+        branches: 90,
       },
     },
   },

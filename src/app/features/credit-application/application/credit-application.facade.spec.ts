@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { CreditApplicationFacade } from './credit-application.facade';
 import { CreditApplication } from '../domain/entities/credit-application';
@@ -50,7 +50,7 @@ describe('CreditApplicationFacade', () => {
     TestBed.resetTestingModule();
   });
 
-  it('starts with all signals in their initial state', () => {
+  test('starts with all signals in their initial state', () => {
     expect(readSignal(facade.application)).toBeNull();
     expect(readSignal(facade.isLoading)).toBe(false);
     expect(readSignal(facade.error)).toBeNull();
@@ -58,7 +58,7 @@ describe('CreditApplicationFacade', () => {
     expect(readSignal(facade.isNewClient)).toBeDefined();
   });
 
-  it('setApplication() stores the application and derives userType signals', () => {
+  test('setApplication() stores the application and derives userType signals', () => {
     const app = makeApp(UserType.NewClient);
     facade.setApplication(app);
 
@@ -68,33 +68,33 @@ describe('CreditApplicationFacade', () => {
     expect(readSignal(facade.isResuming)).toBe(false);
   });
 
-  it('setApplication() with ClientWithCard makes isExistingClient true', () => {
+  test('setApplication() with ClientWithCard makes isExistingClient true', () => {
     facade.setApplication(makeApp(UserType.ClientWithCard));
 
     expect(readSignal(facade.isExistingClient)).toBe(true);
     expect(readSignal(facade.isNewClient)).toBe(false);
   });
 
-  it('setApplication() with ClientWithoutCard also makes isExistingClient true', () => {
+  test('setApplication() with ClientWithoutCard also makes isExistingClient true', () => {
     facade.setApplication(makeApp(UserType.ClientWithoutCard));
 
     expect(readSignal(facade.isExistingClient)).toBe(true);
   });
 
-  it('setApplication() with Prospect makes isResuming true', () => {
+  test('setApplication() with Prospect makes isResuming true', () => {
     facade.setApplication(makeApp(UserType.Prospect));
 
     expect(readSignal(facade.isResuming)).toBe(true);
   });
 
-  it('setPersonName() stores the person name', () => {
+  test('setPersonName() stores the person name', () => {
     const name = { firstName: 'Ana', lastName: 'García', fullName: 'Ana García' };
     facade.setPersonName(name);
 
     expect(readSignal(facade.personName)).toEqual(name);
   });
 
-  it('setLoading() updates the isLoading signal', () => {
+  test('setLoading() updates the isLoading signal', () => {
     facade.setLoading(true);
     expect(readSignal(facade.isLoading)).toBe(true);
 
@@ -102,7 +102,7 @@ describe('CreditApplicationFacade', () => {
     expect(readSignal(facade.isLoading)).toBe(false);
   });
 
-  it('setError() stores the error message', () => {
+  test('setError() stores the error message', () => {
     facade.setError('Something went wrong');
     expect(readSignal(facade.error)).toBe('Something went wrong');
 
@@ -110,14 +110,14 @@ describe('CreditApplicationFacade', () => {
     expect(readSignal(facade.error)).toBeNull();
   });
 
-  it('incrementRetries() and getRetries() track validation retry count', () => {
+  test('incrementRetries() and getRetries() track validation retry count', () => {
     expect(facade.getRetries()).toBe(0);
     facade.incrementRetries();
     facade.incrementRetries();
     expect(facade.getRetries()).toBe(2);
   });
 
-  it('reset() clears all state back to initial values', () => {
+  test('reset() clears all state back to initial values', () => {
     const app = makeApp(UserType.NewClient);
     facade.setApplication(app);
     facade.setLoading(true);
@@ -132,5 +132,24 @@ describe('CreditApplicationFacade', () => {
     expect(readSignal(facade.error)).toBeNull();
     expect(readSignal(facade.personName)).toBeNull();
     expect(facade.getRetries()).toBe(0);
+  });
+
+  test('currentStage falls back to ApplicationStage.Request when application is null', () => {
+    expect(readSignal(facade.currentStage)).toBe('SOLICITUD');
+  });
+
+  test('currentSubstage falls back to ApplicationSubstage.BasicData when application is null', () => {
+    expect(readSignal(facade.currentSubstage)).toBe('DATOS_BASICOS');
+  });
+
+  test('currentStage returns the application stage when an application is set', () => {
+    facade.setApplication(makeApp());
+    expect(readSignal(facade.currentStage)).toBe('SOLICITUD');
+  });
+
+  test('setApplication() with FlipClient makes isFlipClient true', () => {
+    facade.setApplication(makeApp(UserType.FlipClient));
+    expect(readSignal(facade.isFlipClient)).toBe(true);
+    expect(readSignal(facade.isNewClient)).toBe(false);
   });
 });

@@ -1,3 +1,4 @@
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Router } from '@angular/router';
 import { screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
@@ -32,12 +33,10 @@ function createVerificationPort(status: VerificationStatus) {
   };
 }
 
-/** Creates an AdminConfig stub returning the given provider name. */
 function createAdminConfig(provider: string) {
   return { getIdentityProvider: vi.fn().mockReturnValue(provider) };
 }
 
-/** Creates a OriginacionValidationAdapter stub. */
 function createOriginacionAdapter() {
   return {
     getButtonData: vi.fn().mockResolvedValue(ok({
@@ -54,9 +53,15 @@ function createOriginacionAdapter() {
   };
 }
 
-// ── Redirect provider (metamap) — existing tests ─────────────────────────────
-
 describe('IdentityValidation — redirect path (provider: metamap)', () => {
+  beforeEach(() => {
+    vi.spyOn(window, 'open').mockReturnValue(null);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   async function renderIdentityValidation(
     application: CreditApplication | null,
     verificationPort = createVerificationPort('pending'),
@@ -81,7 +86,7 @@ describe('IdentityValidation — redirect path (provider: metamap)', () => {
     return { facade, verificationPort, router, originacionAdapter };
   }
 
-  it('shows a safe error and sends no request when there is no credit application', async () => {
+  test('shows a safe error and sends no request when there is no credit application', async () => {
     const { verificationPort } = await renderIdentityValidation(null);
 
     expect(screen.getByRole('alert')).toHaveTextContent('No hay una solicitud de crédito activa');
@@ -89,8 +94,7 @@ describe('IdentityValidation — redirect path (provider: metamap)', () => {
     expect(verificationPort.getStatus).not.toHaveBeenCalled();
   });
 
-  it('creates one verification, opens only the backend redirect URL, and allows refreshing it', async () => {
-    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+  test('creates one verification, opens only the backend redirect URL, and allows refreshing it', async () => {
     const user = userEvent.setup();
     const { verificationPort } = await renderIdentityValidation(createApplication());
 
@@ -108,10 +112,9 @@ describe('IdentityValidation — redirect path (provider: metamap)', () => {
 
     expect(verificationPort.getStatus).toHaveBeenCalledWith('verification-456');
     expect(verificationPort.verify).toHaveBeenCalledTimes(1);
-    open.mockRestore();
   });
 
-  it.each([
+  test.each([
     ['pending', 'Verificación pendiente'],
     ['rejected', 'Verificación rechazada'],
     ['manual_review', 'Verificación en revisión manual'],
@@ -120,19 +123,16 @@ describe('IdentityValidation — redirect path (provider: metamap)', () => {
     const user = userEvent.setup();
     const { router } = await renderIdentityValidation(createApplication(), createVerificationPort(status));
 
-    // Start verification — opens redirect URL, sets state to 'pending'
     await user.click(screen.getByRole('button', { name: 'Iniciar verificación' }));
     expect(screen.getByText('Verificación pendiente')).toBeInTheDocument();
 
-    // Refresh status — now shows the actual backend status
     await user.click(screen.getByRole('button', { name: 'Actualizar estado' }));
 
     expect(screen.getByText(message)).toBeInTheDocument();
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
-  it('does not open a window when the backend does not return a redirect URL', async () => {
-    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+  test('does not open a window when the backend does not return a redirect URL', async () => {
     const user = userEvent.setup();
     const verificationPort = createVerificationPort('pending');
     verificationPort.verify.mockResolvedValue(ok({ approved: false, verificationId: 'verification-456' }));
@@ -142,10 +142,9 @@ describe('IdentityValidation — redirect path (provider: metamap)', () => {
 
     expect(screen.getByText('Verificación pendiente')).toBeInTheDocument();
     expect(window.open).not.toHaveBeenCalled();
-    open.mockRestore();
   });
 
-  it('shows an actionable error when the backend cannot create the verification', async () => {
+  test('shows an actionable error when the backend cannot create the verification', async () => {
     const user = userEvent.setup();
     const verificationPort = createVerificationPort('pending');
     verificationPort.verify.mockResolvedValue(err(new NetworkError()));
@@ -156,30 +155,26 @@ describe('IdentityValidation — redirect path (provider: metamap)', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('No se pudo iniciar la verificación');
   });
 
-  it('advances only after the backend reports approved via status poll', async () => {
+  test('advances only after the backend reports approved via status poll', async () => {
     const user = userEvent.setup();
     const verificationPort = createVerificationPort('approved');
     const { router } = await renderIdentityValidation(createApplication(), verificationPort);
 
-    // Start verification — opens redirect URL, sets state to 'pending'
     await user.click(screen.getByRole('button', { name: 'Iniciar verificación' }));
     expect(screen.getByText('Verificación pendiente')).toBeInTheDocument();
 
-    // Refresh status — now backend reports approved
     await user.click(screen.getByRole('button', { name: 'Actualizar estado' }));
 
     expect(screen.getByText('Identidad aprobada')).toBeInTheDocument();
     expect(router.navigate).toHaveBeenCalledWith(['/request/result']);
   });
 
-  it('does NOT render <app-metamap-widget> when provider is metamap', async () => {
+  test('does NOT render <app-metamap-widget> when provider is metamap', async () => {
     await renderIdentityValidation(createApplication());
 
     expect(screen.queryByTestId('metamap-widget-container')).not.toBeInTheDocument();
   });
 });
-
-// ── Widget provider (metamap-widget) — NEW tests ──────────────────────────────
 
 describe('IdentityValidation — widget path (provider: metamap-widget)', () => {
   async function renderWithWidget(
@@ -206,23 +201,19 @@ describe('IdentityValidation — widget path (provider: metamap-widget)', () => 
     return { fixture, router, originacionAdapter, verificationPort };
   }
 
-  it('renders <app-metamap-widget> when provider is metamap-widget', async () => {
+  test('renders <app-metamap-widget> when provider is metamap-widget', async () => {
     await renderWithWidget(createApplication());
 
-    // The MetamapWidgetComponent renders a container with this testId
     expect(screen.getByTestId('metamap-widget-container')).toBeInTheDocument();
   });
 
-  it('does NOT render the redirect "Iniciar verificación" button when provider is metamap-widget', async () => {
+  test('does NOT render the redirect "Iniciar verificación" button when provider is metamap-widget', async () => {
     await renderWithWidget(createApplication());
 
-    // The redirect path's button should NOT be present
-    // (the widget has its own "Iniciar verificación" button, but the redirect flow's button is gone)
-    // We verify by checking there's no "Actualizar estado" button — that belongs only to redirect
     expect(screen.queryByRole('button', { name: 'Actualizar estado' })).not.toBeInTheDocument();
   });
 
-  it('calls saveVerification when sessionFinished emits a real verificationId, then routes to result on approved', async () => {
+  test('calls saveVerification when sessionFinished emits a real verificationId, then routes to result on approved', async () => {
     const originacionAdapter = createOriginacionAdapter();
     originacionAdapter.saveVerification.mockResolvedValue(ok({
       state: 'approved',
@@ -233,20 +224,19 @@ describe('IdentityValidation — widget path (provider: metamap-widget)', () => 
 
     const { fixture } = await renderWithWidget(createApplication(), originacionAdapter, router);
 
-    // Simulate the widget emitting a real verificationId
     fixture.componentInstance.onWidgetFinished('v-real-001');
-    // Wait for the async handler
+
     await fixture.whenStable();
     fixture.detectChanges();
 
     expect(originacionAdapter.saveVerification).toHaveBeenCalledWith(
-      'PLACEHOLDER_VALIDATION_ID', // ASSUMPTION (PR-B OQ-1)
+      'PLACEHOLDER_VALIDATION_ID',
       'v-real-001',
     );
     expect(router.navigate).toHaveBeenCalledWith(['/request/result']);
   });
 
-  it('shows approved state in DOM after approved verdict from saveVerification', async () => {
+  test('shows approved state in DOM after approved verdict from saveVerification', async () => {
     const originacionAdapter = createOriginacionAdapter();
     originacionAdapter.saveVerification.mockResolvedValue(ok({
       state: 'approved',
@@ -264,7 +254,7 @@ describe('IdentityValidation — widget path (provider: metamap-widget)', () => 
     expect(screen.getByText('Identidad aprobada')).toBeInTheDocument();
   });
 
-  it('shows rejected state when saveVerification returns rejected verdict', async () => {
+  test('shows rejected state when saveVerification returns rejected verdict', async () => {
     const originacionAdapter = createOriginacionAdapter();
     originacionAdapter.saveVerification.mockResolvedValue(ok({
       state: 'rejected',
@@ -283,7 +273,7 @@ describe('IdentityValidation — widget path (provider: metamap-widget)', () => 
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
-  it('skips saveVerification and routes to /request/result when ALREADY_VALIDATED sentinel received', async () => {
+  test('skips saveVerification and routes to /request/result when ALREADY_VALIDATED sentinel received', async () => {
     const originacionAdapter = createOriginacionAdapter();
     const router = { navigate: vi.fn().mockResolvedValue(true) };
 
@@ -297,7 +287,7 @@ describe('IdentityValidation — widget path (provider: metamap-widget)', () => 
     expect(router.navigate).toHaveBeenCalledWith(['/request/result']);
   });
 
-  it('shows approved state when ALREADY_VALIDATED sentinel received', async () => {
+  test('shows approved state when ALREADY_VALIDATED sentinel received', async () => {
     const originacionAdapter = createOriginacionAdapter();
     const router = { navigate: vi.fn().mockResolvedValue(true) };
 
@@ -310,7 +300,7 @@ describe('IdentityValidation — widget path (provider: metamap-widget)', () => 
     expect(screen.getByText('Identidad aprobada')).toBeInTheDocument();
   });
 
-  it('shows an error state when saveVerification returns a NetworkError', async () => {
+  test('shows an error state when saveVerification returns a NetworkError', async () => {
     const originacionAdapter = createOriginacionAdapter();
     originacionAdapter.saveVerification.mockResolvedValue(err(new NetworkError()));
     const router = { navigate: vi.fn().mockResolvedValue(true) };
@@ -325,7 +315,7 @@ describe('IdentityValidation — widget path (provider: metamap-widget)', () => 
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
-  it('falls back to error state on loadError from the widget', async () => {
+  test('falls back to error state on loadError from the widget', async () => {
     const { fixture } = await renderWithWidget(createApplication());
 
     fixture.componentInstance.onWidgetLoadError();
@@ -334,15 +324,6 @@ describe('IdentityValidation — widget path (provider: metamap-widget)', () => 
     expect(screen.getByRole('alert')).toBeInTheDocument();
   });
 });
-
-// ── DEV-SMOKE: widgetClientId/flowId seeded from environment ─────────────────
-//
-// When useWidget is true (provider === 'metamap-widget'), the page MUST expose
-// widgetClientId() and widgetFlowId() populated from environment.metamapClientId
-// and environment.metamapFlowId so local developers can paste their values there
-// and see the widget launch without the Credix backend.
-//
-// PR-B replaces this seed with the real backend fetch (getButtonData).
 
 describe('IdentityValidation — DEV-SMOKE: widgetClientId/flowId from environment', () => {
   async function renderWithWidget(application: CreditApplication | null) {
@@ -366,29 +347,21 @@ describe('IdentityValidation — DEV-SMOKE: widgetClientId/flowId from environme
     return { fixture, router, originacionAdapter };
   }
 
-  it('exposes widgetClientId() equal to environment.metamapClientId when useWidget is true', async () => {
+  test('exposes widgetClientId() equal to environment.metamapClientId when useWidget is true', async () => {
     const { fixture } = await renderWithWidget(createApplication());
     const component = fixture.componentInstance;
 
-    // The page must seed widgetClientId from environment.metamapClientId.
-    // In tests the environment is the real dev environment (or the mocked one from vitest config).
-    // We assert the SAME VALUE as the imported environment, not a hardcoded string,
-    // so this test stays green regardless of what the developer pastes there.
     expect(component.widgetClientId()).toBe(environment.metamapClientId);
   });
 
-  it('exposes widgetFlowId() equal to environment.metamapFlowId when useWidget is true', async () => {
+  test('exposes widgetFlowId() equal to environment.metamapFlowId when useWidget is true', async () => {
     const { fixture } = await renderWithWidget(createApplication());
     const component = fixture.componentInstance;
 
     expect(component.widgetFlowId()).toBe(environment.metamapFlowId);
   });
 
-  it('widgetClientId/flowId remain empty strings when environment values are not configured (smoke default)', () => {
-    // When a developer has NOT yet pasted their MetaMap credentials,
-    // environment.metamapClientId and metamapFlowId default to ''.
-    // The widget will emit loadError (SDK guard), which is handled gracefully.
-    // This test documents the expected behaviour of the default (unconfigured) state.
+  test('widgetClientId/flowId remain empty strings when environment values are not configured (smoke default)', () => {
     expect(environment.metamapClientId).toBe('');
     expect(environment.metamapFlowId).toBe('');
   });

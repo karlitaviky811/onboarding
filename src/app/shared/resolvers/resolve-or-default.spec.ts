@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, test, expect, vi, afterEach } from 'vitest';
 import { resolveOrDefault } from './resolve-or-default';
 import { ok, err, NetworkError } from '@shared/result/result';
 
@@ -7,12 +7,12 @@ describe('resolveOrDefault()', () => {
     vi.restoreAllMocks();
   });
 
-  it('returns the result value when the promise resolves with success', async () => {
+  test('returns the result value when the promise resolves with success', async () => {
     const result = await resolveOrDefault(Promise.resolve(ok('the-value')), 'default');
     expect(result).toBe('the-value');
   });
 
-  it('returns the default value when the promise resolves with a failure', async () => {
+  test('returns the default value when the promise resolves with a failure', async () => {
     const result = await resolveOrDefault(
       Promise.resolve(err(new NetworkError())),
       'fallback',
@@ -20,7 +20,7 @@ describe('resolveOrDefault()', () => {
     expect(result).toBe('fallback');
   });
 
-  it('logs a warning to console when the result fails', async () => {
+  test('logs a warning to console when the result fails', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const error = new NetworkError();
 
@@ -30,7 +30,7 @@ describe('resolveOrDefault()', () => {
     expect(warnSpy.mock.calls[0][0]).toContain('[Resolver]');
   });
 
-  it('does NOT call console.warn on success', async () => {
+  test('does NOT call console.warn on success', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     await resolveOrDefault(Promise.resolve(ok(42)), 0);
@@ -38,7 +38,7 @@ describe('resolveOrDefault()', () => {
     expect(warnSpy).not.toHaveBeenCalled();
   });
 
-  it('handles an object default value on failure', async () => {
+  test('handles an object default value on failure', async () => {
     const defaultVal = { id: 0, name: 'default' };
     const result = await resolveOrDefault(
       Promise.resolve(err(new NetworkError())),

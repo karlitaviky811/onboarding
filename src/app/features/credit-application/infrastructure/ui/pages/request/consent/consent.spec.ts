@@ -1,3 +1,4 @@
+import { describe, test, expect, vi, afterEach, type Mock } from 'vitest';
 import { Router } from '@angular/router';
 import { Component, signal } from '@angular/core';
 import { Subject } from 'rxjs';
@@ -10,8 +11,6 @@ import { Consent } from './consent';
 import { IDENTITY_WIDGET_REGISTRY } from '../../../components/identity-widget/widget-registry';
 import type { IdentityVerificationWidget, VerificationWidgetEvent } from '../../../components/identity-widget/identity-verification-widget';
 
-// ── helpers ───────────────────────────────────────────────────────────────────
-
 function createFacade(personName: PersonName | null = null) {
   return {
     personName: signal<PersonName | null>(personName).asReadonly(),
@@ -19,17 +18,11 @@ function createFacade(personName: PersonName | null = null) {
   };
 }
 
-// Shared events subject so tests can push events into the fake widget.
 let _fakeWidgetEventsSubject: Subject<VerificationWidgetEvent>;
-let _fakeWidgetInitializeSpy: ReturnType<typeof vi.fn>;
-let _fakeWidgetOpenSpy: ReturnType<typeof vi.fn>;
-let _fakeWidgetDestroySpy: ReturnType<typeof vi.fn>;
+let _fakeWidgetInitializeSpy: Mock<(context: { referenceId?: string }) => void>;
+let _fakeWidgetOpenSpy: Mock<() => void>;
+let _fakeWidgetDestroySpy: Mock<() => void>;
 
-/**
- * Fake widget component decorated with @Component so it can be created via
- * ViewContainerRef.createComponent(). Implements IdentityVerificationWidget.
- * Its spies and events$ are accessible through module-level variables.
- */
 @Component({
   selector: 'app-fake-identity-widget',
   standalone: true,
@@ -37,16 +30,22 @@ let _fakeWidgetDestroySpy: ReturnType<typeof vi.fn>;
 })
 class FakeIdentityWidgetComponent implements IdentityVerificationWidget {
   events$ = _fakeWidgetEventsSubject;
-  initialize = _fakeWidgetInitializeSpy;
-  open = _fakeWidgetOpenSpy;
-  destroy = _fakeWidgetDestroySpy;
+  initialize(context: { referenceId?: string }): void {
+    _fakeWidgetInitializeSpy(context);
+  }
+  open(): void {
+    _fakeWidgetOpenSpy();
+  }
+  destroy(): void {
+    _fakeWidgetDestroySpy();
+  }
 }
 
 function createFakeWidgetMocks() {
   _fakeWidgetEventsSubject = new Subject<VerificationWidgetEvent>();
-  _fakeWidgetInitializeSpy = vi.fn();
-  _fakeWidgetOpenSpy = vi.fn();
-  _fakeWidgetDestroySpy = vi.fn();
+  _fakeWidgetInitializeSpy = vi.fn<(context: { referenceId?: string }) => void>();
+  _fakeWidgetOpenSpy = vi.fn<() => void>();
+  _fakeWidgetDestroySpy = vi.fn<() => void>();
 }
 
 async function renderConsent(
@@ -86,28 +85,25 @@ async function renderConsent(
   };
 }
 
-// ── tests ─────────────────────────────────────────────────────────────────────
-
 describe('Consent screen', () => {
-
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
   describe('Greeting', () => {
-    it('shows "¡Hola {firstName}!" greeting using the stored person name', async () => {
+    test('shows "¡Hola {firstName}!" greeting using the stored person name', async () => {
       await renderConsent({ firstName: 'María', lastName: 'López', fullName: 'María López' });
       expect(screen.getByText(/¡Hola María!/i)).toBeTruthy();
     });
 
-    it('shows fallback greeting when no person name is available', async () => {
+    test('shows fallback greeting when no person name is available', async () => {
       await renderConsent(null);
       expect(screen.getByText(/¡Hola!/i)).toBeTruthy();
     });
   });
 
   describe('Checkbox states — Continue button disabled', () => {
-    it('Continue button is disabled when both checkboxes are unchecked', async () => {
+    test('Continue button is disabled when both checkboxes are unchecked', async () => {
       const { fixture } = await renderConsent({ firstName: 'Juan', lastName: 'Pérez', fullName: 'Juan Pérez' });
       const component = fixture.componentInstance;
 
@@ -116,7 +112,7 @@ describe('Consent screen', () => {
       expect(component['canContinue']()).toBe(false);
     });
 
-    it('Continue button is disabled when only the first checkbox is checked', async () => {
+    test('Continue button is disabled when only the first checkbox is checked', async () => {
       const { fixture } = await renderConsent({ firstName: 'Juan', lastName: 'Pérez', fullName: 'Juan Pérez' });
       const component = fixture.componentInstance;
 
@@ -126,7 +122,7 @@ describe('Consent screen', () => {
       expect(component['canContinue']()).toBe(false);
     });
 
-    it('Continue button is disabled when only the second checkbox is checked', async () => {
+    test('Continue button is disabled when only the second checkbox is checked', async () => {
       const { fixture } = await renderConsent({ firstName: 'Juan', lastName: 'Pérez', fullName: 'Juan Pérez' });
       const component = fixture.componentInstance;
 
@@ -138,7 +134,7 @@ describe('Consent screen', () => {
   });
 
   describe('Checkbox states — Continue button enabled', () => {
-    it('canContinue() is true when both checkboxes are checked', async () => {
+    test('canContinue() is true when both checkboxes are checked', async () => {
       const { fixture } = await renderConsent({ firstName: 'Juan', lastName: 'Pérez', fullName: 'Juan Pérez' });
       const component = fixture.componentInstance;
 
@@ -150,19 +146,16 @@ describe('Consent screen', () => {
     });
   });
 
-  // ── Provider-agnostic widget initialization ────────────────────────────────
-
   describe('Widget initialization (provider-agnostic)', () => {
-    it('calls initialize() on the dynamically-created widget instance during ngAfterViewInit', async () => {
+    test('calls initialize() on the dynamically-created widget instance during ngAfterViewInit', async () => {
       const { initializeSpy } = await renderConsent({
         firstName: 'Juan', lastName: 'Pérez', fullName: 'Juan Pérez',
       });
 
-      // initialize() must be called during component init (ngAfterViewInit)
       expect(initializeSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('does NOT call open() during initialization (pre-warm only, NOT immediate launch)', async () => {
+    test('does NOT call open() during initialization (pre-warm only, NOT immediate launch)', async () => {
       const { openSpy } = await renderConsent({
         firstName: 'Juan', lastName: 'Pérez', fullName: 'Juan Pérez',
       });
@@ -171,10 +164,8 @@ describe('Consent screen', () => {
     });
   });
 
-  // ── Continue → widget.open() (no navigation) ──────────────────────────────
-
   describe('Continue → widget.open() (no navigation)', () => {
-    it('does NOT call router.navigate when both checkboxes are checked and Continue is invoked', async () => {
+    test('does NOT call router.navigate when both checkboxes are checked and Continue is invoked', async () => {
       const { fixture, router } = await renderConsent({
         firstName: 'Juan', lastName: 'Pérez', fullName: 'Juan Pérez',
       });
@@ -190,19 +181,19 @@ describe('Consent screen', () => {
       expect(router.navigate).not.toHaveBeenCalled();
     });
 
-    it('does NOT navigate when Continue is clicked with checkboxes unchecked', async () => {
+    test('does NOT navigate when Continue is clicked with checkboxes unchecked', async () => {
       const { fixture, router } = await renderConsent({
         firstName: 'Juan', lastName: 'Pérez', fullName: 'Juan Pérez',
       });
       const component = fixture.componentInstance;
 
-      component.onContinue(); // checkboxes unchecked
+      component.onContinue();
       await fixture.whenStable();
 
       expect(router.navigate).not.toHaveBeenCalled();
     });
 
-    it('calls open() on the widget instance when both checkboxes are checked and Continue is invoked', async () => {
+    test('calls open() on the widget instance when both checkboxes are checked and Continue is invoked', async () => {
       const { fixture, openSpy } = await renderConsent({
         firstName: 'Juan', lastName: 'Pérez', fullName: 'Juan Pérez',
       });
@@ -217,22 +208,20 @@ describe('Consent screen', () => {
       expect(openSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('does NOT call open() when checkboxes are unchecked', async () => {
+    test('does NOT call open() when checkboxes are unchecked', async () => {
       const { fixture, openSpy } = await renderConsent({
         firstName: 'Juan', lastName: 'Pérez', fullName: 'Juan Pérez',
       });
       const component = fixture.componentInstance;
 
-      component.onContinue(); // checkboxes unchecked
+      component.onContinue();
 
       expect(openSpy).not.toHaveBeenCalled();
     });
   });
 
-  // ── Widget events$ subscriptions ──────────────────────────────────────────
-
   describe('Widget events$ subscriptions', () => {
-    it('navigates to /request/result when events$ emits finished', async () => {
+    test('navigates to /request/result when events$ emits finished', async () => {
       const { fixture, router, eventsSubject } = await renderConsent({
         firstName: 'Juan', lastName: 'Pérez', fullName: 'Juan Pérez',
       });
@@ -244,7 +233,7 @@ describe('Consent screen', () => {
       expect(router.navigate).toHaveBeenCalledWith(['/request/result']);
     });
 
-    it('sets widgetLoadError when events$ emits error', async () => {
+    test('sets widgetLoadError when events$ emits error', async () => {
       const { fixture, eventsSubject } = await renderConsent({
         firstName: 'Juan', lastName: 'Pérez', fullName: 'Juan Pérez',
       });
@@ -256,7 +245,7 @@ describe('Consent screen', () => {
       expect(component['widgetLoadError']()).toBe(true);
     });
 
-    it('shows error message in DOM when events$ emits error', async () => {
+    test('shows error message in DOM when events$ emits error', async () => {
       const { fixture, eventsSubject } = await renderConsent({
         firstName: 'Juan', lastName: 'Pérez', fullName: 'Juan Pérez',
       });
@@ -267,7 +256,7 @@ describe('Consent screen', () => {
       expect(screen.getByTestId('consent-widget-error')).toBeInTheDocument();
     });
 
-    it('does NOT navigate when events$ emits exited (user cancelled)', async () => {
+    test('does NOT navigate when events$ emits exited (user cancelled)', async () => {
       const { fixture, router, eventsSubject } = await renderConsent({
         firstName: 'Juan', lastName: 'Pérez', fullName: 'Juan Pérez',
       });
@@ -279,10 +268,8 @@ describe('Consent screen', () => {
     });
   });
 
-  // ── Unknown provider guard ─────────────────────────────────────────────────
-
   describe('Unknown provider — shows error', () => {
-    it('shows widgetLoadError when provider is not in the registry', async () => {
+    test('shows widgetLoadError when provider is not in the registry', async () => {
       createFakeWidgetMocks();
 
       const router = { navigate: vi.fn().mockResolvedValue(true) };
@@ -290,7 +277,7 @@ describe('Consent screen', () => {
       const adminConfigStub = {
         getIdentityProvider: vi.fn().mockReturnValue('unknown-provider'),
       };
-      // Registry has NO 'unknown-provider' entry
+
       const emptyRegistry = {};
 
       const { fixture } = await renderComponent(Consent, {

@@ -1,3 +1,4 @@
+import { describe, test, expect, vi } from 'vitest';
 import { Router } from '@angular/router';
 import { signal } from '@angular/core';
 import {
@@ -12,8 +13,6 @@ import { renderComponent } from '../../../../../../../../testing';
 import { BasicData } from './basic-data';
 import { AdminConfigAdapter } from '../../../../adapters/admin/admin-config.adapter';
 import { ScreenContentAdapter } from '../../../../adapters/screen-content/screen-content.adapter';
-
-// ── helpers ───────────────────────────────────────────────────────────────────
 
 function createExistingApplication(): CreditApplication {
   return CreditApplication.create(
@@ -84,13 +83,10 @@ async function renderBasicData(
   return { fixture, facade, router };
 }
 
-// ── tests ─────────────────────────────────────────────────────────────────────
-
 describe('BasicData — onContinue()', () => {
-  it('does nothing when canContinue() is false (guard)', async () => {
+  test('does nothing when canContinue() is false (guard)', async () => {
     const { fixture, facade, router } = await renderBasicData();
 
-    // canContinue() is false by default (no ID, no contact fields)
     fixture.componentInstance.onContinue();
     await fixture.whenStable();
 
@@ -98,18 +94,16 @@ describe('BasicData — onContinue()', () => {
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
-  it('builds Identification with correct type (NACIONAL → National) and number, then calls determineUserType.execute', async () => {
+  test('builds Identification with correct type (NACIONAL → National) and number, then calls determineUserType.execute', async () => {
     const { fixture, facade } = await renderBasicData(
       ok({ userType: 'CLIENTE_NUEVO', existingApplication: null }),
     );
 
     const component = fixture.componentInstance;
 
-    // Force canContinue() to true by setting internal signals directly
     component['idNumber'].set('123456789');
     component['showContactFields'].set(true);
     component['contact'].set({ countryCode: '+506', phone: '88888888', email: 'test@test.com' });
-    // selectedIndex 0 = NACIONAL (the default)
 
     component.onContinue();
     await fixture.whenStable();
@@ -121,14 +115,13 @@ describe('BasicData — onContinue()', () => {
     expect(passedId.number).toBe('123456789');
   });
 
-  it('builds Identification with DIMEX type when id type is DIMEX', async () => {
+  test('builds Identification with DIMEX type when id type is DIMEX', async () => {
     const { fixture, facade } = await renderBasicData(
       ok({ userType: 'CLIENTE_NUEVO', existingApplication: null }),
     );
 
     const component = fixture.componentInstance;
 
-    // Switch to DIMEX (index 1)
     component.selectIdType(1);
     component['idNumber'].set('123456789012');
     component['showContactFields'].set(true);
@@ -142,7 +135,7 @@ describe('BasicData — onContinue()', () => {
     expect(passedId.number).toBe('123456789012');
   });
 
-  it('calls setApplication with existingApplication and navigates to /request/retomando when application exists (validated client)', async () => {
+  test('calls setApplication with existingApplication and navigates to /request/retomando when application exists (validated client)', async () => {
     const existingApp = createExistingApplication();
     const { fixture, facade, router } = await renderBasicData(
       ok({ userType: 'CLIENTE_CON_TARJETA', existingApplication: existingApp }),
@@ -160,7 +153,7 @@ describe('BasicData — onContinue()', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/request/retomando']);
   });
 
-  it('creates a new CreditApplication and navigates to /request/consent when existingApplication is null (new client)', async () => {
+  test('creates a new CreditApplication and navigates to /request/consent when existingApplication is null (new client)', async () => {
     const { fixture, facade, router } = await renderBasicData(
       ok({ userType: 'CLIENTE_NUEVO', existingApplication: null }),
     );
@@ -181,7 +174,7 @@ describe('BasicData — onContinue()', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/request/consent']);
   });
 
-  it('calls facade.tseQuery.findByIdentification with the id number and stores the result via facade.setPersonName', async () => {
+  test('calls facade.tseQuery.findByIdentification with the id number and stores the result via facade.setPersonName', async () => {
     const personName = { firstName: 'María', lastName: 'López', fullName: 'María López' };
     const { fixture, facade } = await renderBasicData(
       ok({ userType: 'CLIENTE_NUEVO', existingApplication: null }),
@@ -200,7 +193,7 @@ describe('BasicData — onContinue()', () => {
     expect(facade.setPersonName).toHaveBeenCalledWith(personName);
   });
 
-  it('still navigates correctly even when TSE query fails (name fetch is non-blocking)', async () => {
+  test('still navigates correctly even when TSE query fails (name fetch is non-blocking)', async () => {
     const { fixture, facade, router } = await renderBasicData(
       ok({ userType: 'CLIENTE_NUEVO', existingApplication: null }),
       err(new NetworkError()),
@@ -214,13 +207,12 @@ describe('BasicData — onContinue()', () => {
     component.onContinue();
     await fixture.whenStable();
 
-    // Navigation should still happen even if TSE fails
     expect(router.navigate).toHaveBeenCalledWith(['/request/consent']);
-    // setPersonName should NOT be called when TSE fails
+
     expect(facade.setPersonName).not.toHaveBeenCalled();
   });
 
-  it('calls setError and does NOT navigate on failure', async () => {
+  test('calls setError and does NOT navigate on failure', async () => {
     const { fixture, facade, router } = await renderBasicData(
       err(new NetworkError()),
     );
@@ -234,11 +226,11 @@ describe('BasicData — onContinue()', () => {
     await fixture.whenStable();
 
     expect(facade.setError).toHaveBeenCalledTimes(1);
-    expect(facade.setError.mock.calls[0][0]).toBeTruthy(); // friendly message
+    expect(facade.setError.mock.calls[0][0]).toBeTruthy();
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
-  it('sets loading to true before the call and false after (on success)', async () => {
+  test('sets loading to true before the call and false after (on success)', async () => {
     const existingApp = createExistingApplication();
     const { fixture, facade } = await renderBasicData(
       ok({ userType: 'CLIENTE_CON_TARJETA', existingApplication: existingApp }),

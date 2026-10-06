@@ -1,15 +1,15 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import { DetermineUserTypeUseCase } from '../../application/use-cases/determine-user-type.use-case';
 import { CreditApplicationRepository } from '../ports/credit-application-repository.port';
 import { Identification, IdentificationType } from '../value-objects/identification';
 import { CreditApplication } from '../entities/credit-application';
 import { UserType } from '../value-objects/user-type';
-import { ok } from '../../../../shared/result/result';
+import { ok, err, NetworkError } from '../../../../shared/result/result';
 
 describe('DetermineUserTypeUseCase', () => {
   const identification = new Identification(IdentificationType.National, '123456789');
 
-  it('should return NewClient when no existing application is found', async () => {
+  test('should return NewClient when no existing application is found', async () => {
     const repo: CreditApplicationRepository = {
       findByIdentification: vi.fn().mockResolvedValue(ok(null)),
       save: vi.fn(),
@@ -26,7 +26,7 @@ describe('DetermineUserTypeUseCase', () => {
     }
   });
 
-  it('should return the existing user type when an application is found', async () => {
+  test('should return the existing user type when an application is found', async () => {
     const existingApp = CreditApplication.create('app-1', identification).withUserType(UserType.FlipClient);
     const repo: CreditApplicationRepository = {
       findByIdentification: vi.fn().mockResolvedValue(ok(existingApp)),
@@ -41,6 +41,22 @@ describe('DetermineUserTypeUseCase', () => {
     if (result.success) {
       expect(result.value.userType).toBe(UserType.FlipClient);
       expect(result.value.existingApplication).toBe(existingApp);
+    }
+  });
+
+  test('propagates the failure Result when the repository returns an error', async () => {
+    const repo: CreditApplicationRepository = {
+      findByIdentification: vi.fn().mockResolvedValue(err(new NetworkError())),
+      save: vi.fn(),
+      findById: vi.fn(),
+    };
+
+    const useCase = new DetermineUserTypeUseCase(repo);
+    const result = await useCase.execute(identification);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toBeInstanceOf(NetworkError);
     }
   });
 });
